@@ -1,3 +1,4 @@
+import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:flutter/material.dart';
 
 import 'data/theme.dart';
@@ -8,16 +9,19 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: HomeScreen(title: 'Flutter Demo Home Page'),
+    return DynamicTheme(
+        defaultBrightness: Brightness.light,
+        data: (brightness) => appThemeDark, //TODO Change theme: DynamicTheme.of(context).setThemeData(appThemeExperimental)
+        themedWidgetBuilder: (context, theme) {
+          return new MaterialApp(
+            title: 'Flutter Demo',
+            theme: theme,
+            home: HomeScreen(title: 'Flutter Demo Home Page'),
+          );
+        }
     );
   }
 }

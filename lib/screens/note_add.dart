@@ -8,6 +8,7 @@ class AddNoteScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Column(
+
         ),
       ),
     );

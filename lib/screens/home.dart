@@ -1,3 +1,4 @@
+import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:trpp/data/theme.dart';
@@ -5,10 +6,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trpp/widgets/custom_alert_dialog.dart';
 
 import 'note_add.dart';
+import 'note_view.dart';
 import 'settings.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({Key key, this.title, changeTheme}) : super(key: key);
+  HomeScreen({Key key, this.title}) : super(key: key);
 
   final String title;
 
@@ -72,13 +74,13 @@ class CustomDismissible extends StatelessWidget {
     return Dismissible(
       key: ValueKey(index),
       direction: DismissDirection.endToStart,
-      child: Card(child: CustomListTile(index)),
+      child: Card(child: NoteListItem(index)),
       background: Padding(
         padding: EdgeInsets.only(right: 30),
         child: Align(
           alignment: Alignment.centerRight,
           child: Icon(FontAwesomeIcons.trashAlt,
-              color: Color(0xFFFA8182), size: 28),
+              color: Colors.red.shade500, size: 28),
         ),
       ),
       //TODO onDismissed:
@@ -104,8 +106,8 @@ class CustomListView extends StatelessWidget {
   }
 }
 
-class CustomListTile extends StatelessWidget {
-  CustomListTile(this.index);
+class NoteListItem extends StatelessWidget {
+  NoteListItem(this.index);
   final int index;
 
   @override
@@ -132,10 +134,11 @@ class CustomListTile extends StatelessWidget {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w400,
-          color: Color(0xff959EA7),
+          color: Theme.of(context).accentColor,
         ),
       ),
-      //TODO onTap:
+      onTap: () => Navigator.push(context,
+          MaterialPageRoute(builder: (context) => ReadNoteScreen(index))),
       contentPadding: EdgeInsets.all(17),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
