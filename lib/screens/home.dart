@@ -54,7 +54,7 @@ class _MyHomePageState extends State<HomeScreen> {
         onPressed: () => Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => AddNoteScreen(isNew: true))),
+                builder: (context) => AddNoteScreen(isNew: true, mode: NOTESCREEN_MODE_EDIT))),
       ),
     );
   }
@@ -176,7 +176,7 @@ class NoteListItem extends StatelessWidget {
         ),
       ),
       onTap: () => Navigator.push(
-          context, MaterialPageRoute(builder: (context) => ReadNoteScreen(nm))),
+          context, MaterialPageRoute(builder: (context) => AddNoteScreen(nm: nm, isNew: false, mode: NOTESCREEN_MODE_VIEW))),
       contentPadding: EdgeInsets.all(17),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );

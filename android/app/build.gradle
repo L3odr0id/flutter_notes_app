@@ -37,7 +37,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.a55company.trpp"
+        applicationId "com.company55.notes"
         minSdkVersion 21
         targetSdkVersion 30
         versionCode flutterVersionCode.toInteger()
