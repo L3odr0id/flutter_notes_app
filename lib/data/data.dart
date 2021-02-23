@@ -25,23 +25,22 @@ class NotesDatabaseService {
 
     return await openDatabase(path, version: 1,
         onCreate: (Database db, int version) async {
-          await db.execute(
-              'CREATE TABLE Notes (_id INTEGER PRIMARY KEY, content TEXT, date TEXT);');
-          print('New table created at $path');
-        });
+      await db.execute(
+          'CREATE TABLE Notes (_id INTEGER PRIMARY KEY, content TEXT, date TEXT);');
+      print('New table created at $path');
+    });
   }
 
   Future<List<NotesModel>> getNotesFromDB() async {
     final db = await database;
     List<NotesModel> notesList = [];
-    List<Map> maps = await db.query('Notes',
-        columns: ['_id', 'content', 'date']);
+    List<Map> maps =
+        await db.query('Notes', columns: ['_id', 'content', 'date']);
     if (maps.length > 0) {
       maps.forEach((map) {
         notesList.add(NotesModel.fromMap(map));
       });
     }
-    print("data.dart getNotesFromDB ${notesList.length}");
     return notesList;
   }
 
@@ -59,10 +58,8 @@ class NotesDatabaseService {
 
   Future<NotesModel> addNoteInDB(NotesModel newNote) async {
     final db = await database;
-    print("Doing insert");
-    print(newNote.content);
     int id = await db.transaction((transaction) {
-      transaction.rawInsert(
+      return transaction.rawInsert(
           'INSERT into Notes(content, date) VALUES ( "${newNote.content}", "${newNote.date.toIso8601String()}");');
     });
     newNote.id = id;
@@ -70,7 +67,6 @@ class NotesDatabaseService {
     return newNote;
   }
 }
-
 
 class NotesModel {
   int id;

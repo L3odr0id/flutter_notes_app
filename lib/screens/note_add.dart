@@ -3,15 +3,41 @@ import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trpp/data/data.dart';
 
-
-class AddNoteScreen extends StatelessWidget {
-  AddNoteScreen({Key key, this.isNew}) : super(key: key);
+class AddNoteScreen extends StatefulWidget {
+  AddNoteScreen({Key key, this.isNew, this.nm}) : super(key: key);
   final bool isNew;
+  final NotesModel nm;
   final TextEditingController contentController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
+  State<StatefulWidget> createState() => AddNoteScreenState(this);
 
+  void onLoad() {
+    if (!isNew) contentController.text = nm.content;
+  }
+
+  void handleSave() async {
+    if (isNew) {
+      if (contentController.text != "") {
+        NotesModel nm =
+            NotesModel(content: contentController.text, date: DateTime.now());
+        NotesDatabaseService.db.addNoteInDB(nm);
+      }
+    } else {
+      nm.content = contentController.text;
+      nm.date = DateTime.now();
+      NotesDatabaseService.db.updateNoteInDB(nm);
+    }
+  }
+}
+
+class AddNoteScreenState extends State<AddNoteScreen> {
+  AddNoteScreenState(this.widget);
+
+  final AddNoteScreen widget;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -20,12 +46,18 @@ class AddNoteScreen extends StatelessWidget {
               title: 'Add Note',
               icon: FontAwesomeIcons.solidSave,
               onPressed: () {
-                  handleSave();
-                  //Navigator.pop(context);
+                widget.handleSave();
+                //Navigator.pop(context);
+              },
+              backToMenu: () {
+                backToMenu();
               },
             ),
-            Flexible(child: CustomTextField(maxLines: 50, hintText: 'Note',
-              controller: contentController)
+            Flexible(
+              child: CustomTextField(
+                  maxLines: 50,
+                  hintText: 'Note',
+                  controller: widget.contentController),
             ),
           ],
         ),
@@ -33,16 +65,18 @@ class AddNoteScreen extends StatelessWidget {
     );
   }
 
-  void handleSave() async {
-    if (isNew){
-      if(contentController.text!="") {
-        NotesModel nm = NotesModel(
-            content: contentController.text, date: DateTime.now());
-        print(contentController.text);
-        NotesDatabaseService.db.addNoteInDB(nm);
-      }
-    }else{
-      
+  @override
+  void initState() {
+    super.initState();
+    widget.onLoad();
+  }
+
+  void backToMenu() {
+    if (widget.isNew)
+      Navigator.pop(context);
+    else {
+      Navigator.pop(context);
+      Navigator.pop(context);
     }
   }
 }
@@ -51,11 +85,11 @@ class CustomTextField extends StatelessWidget {
   final int maxLines;
   final String hintText;
   final TextEditingController controller;
+
   CustomTextField({this.maxLines, this.hintText, this.controller});
 
   @override
   Widget build(BuildContext context) {
-
     return Padding(
       padding: const EdgeInsets.all(15),
       child: TextField(
@@ -63,7 +97,7 @@ class CustomTextField extends StatelessWidget {
         maxLines: maxLines,
         decoration: InputDecoration(hintText: hintText),
         onChanged: (input) {
-          if(input != null) {
+          if (input != null) {
             // TODO save data
           }
         },
@@ -72,17 +106,16 @@ class CustomTextField extends StatelessWidget {
   }
 }
 
-
 class CustomToolbar extends StatelessWidget {
-  CustomToolbar({this.title,this.isVisible,this.icon,this.onPressed});
+  CustomToolbar({this.title, this.icon, this.onPressed, this.backToMenu});
+
   final String title;
-  final bool isVisible;
   final IconData icon;
   final Function onPressed;
+  final Function backToMenu;
 
   @override
   Widget build(BuildContext context) {
-
     return Padding(
       padding: EdgeInsets.all(10),
       child: Row(
@@ -90,19 +123,15 @@ class CustomToolbar extends StatelessWidget {
         children: <Widget>[
           IconButton(
             icon: Icon(Icons.arrow_back, size: 27),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => backToMenu(),
           ),
           Text(
             title,
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
           ),
-          Visibility(
-            visible: isVisible ?? true,
-            child: IconButton(icon: Icon(icon, size: 22), onPressed: onPressed),
-          ),
+          IconButton(icon: Icon(icon, size: 22), onPressed: onPressed),
         ],
       ),
     );
   }
 }
-

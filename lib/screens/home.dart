@@ -35,7 +35,7 @@ class _MyHomePageState extends State<HomeScreen> {
   setNotesFromDB() async {
     var fetchedNotes = await NotesDatabaseService.db.getNotesFromDB();
     notesList = fetchedNotes;
-    setState((){});
+    setState(() {});
   }
 
   @override
@@ -52,7 +52,9 @@ class _MyHomePageState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         child: Icon(FontAwesomeIcons.plus),
         onPressed: () => Navigator.push(
-            context, MaterialPageRoute(builder: (context) => AddNoteScreen(isNew: true))),
+            context,
+            MaterialPageRoute(
+                builder: (context) => AddNoteScreen(isNew: true))),
       ),
     );
   }
@@ -88,7 +90,6 @@ class CustomDismissible extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Dismissible(
       key: ValueKey(index),
       direction: DismissDirection.endToStart,
@@ -101,7 +102,9 @@ class CustomDismissible extends StatelessWidget {
               color: Colors.red.shade500, size: 28),
         ),
       ),
-      //TODO onDismissed:
+      onDismissed: (direction) => () async {
+        await NotesDatabaseService.db.deleteNoteInDB(nm);
+      },
       confirmDismiss: (direction) => showDialog(
           context: context, builder: (context) => CustomAlertDialog()),
     );
@@ -115,13 +118,13 @@ class CustomListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("Notes: ${notesList.length}");
     return Flexible(
       child: ListView.builder(
         padding: EdgeInsets.all(10),
         physics: BouncingScrollPhysics(),
         itemCount: notesList.length,
-        itemBuilder: (context,index) => CustomDismissible(index: index, nm: notesList[index]),
+        itemBuilder: (context, index) =>
+            CustomDismissible(index: index, nm: notesList[index]),
       ),
     );
   }
@@ -129,25 +132,25 @@ class CustomListView extends StatelessWidget {
 
 class NoteListItem extends StatelessWidget {
   NoteListItem(this.index, this.nm);
+
   final int index;
   final NotesModel nm;
 
-  String getTitleFromModel(NotesModel nm){
+  String getTitleFromModel(NotesModel nm) {
     List<String> a = nm.content.split("\n");
-    return a.first.substring(0, min(a.length, 8));
+    return a.first.substring(0, min(a.first.length, 8));
   }
 
-  String getShortDesc(NotesModel nm){
+  String getShortDesc(NotesModel nm) {
     List<String> a = nm.content.split("\n");
-    if (a.length > 1){
-      return a[1].substring(0, min(a.length, 16));
-    }else
+    if (a.length > 1) {
+      return a[1].substring(0, min(a[1].length, 16));
+    } else
       return "";
   }
 
   @override
   Widget build(BuildContext context) {
-    print("Building $index");
     return ListTile(
       title: Text(
         getTitleFromModel(nm),
@@ -172,8 +175,8 @@ class NoteListItem extends StatelessWidget {
           color: Theme.of(context).accentColor,
         ),
       ),
-      onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (context) => ReadNoteScreen(index))),
+      onTap: () => Navigator.push(
+          context, MaterialPageRoute(builder: (context) => ReadNoteScreen(nm))),
       contentPadding: EdgeInsets.all(17),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
