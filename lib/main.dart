@@ -13,8 +13,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DynamicTheme(
-        defaultBrightness: Brightness.light,
-        data: (brightness) => appThemeDark, //TODO Change theme: DynamicTheme.of(context).setThemeData(appThemeExperimental)
+        defaultBrightness: ThemeNames[0].theme.brightness,
+        data: (brightness) => ThemeNames[0].theme,
         themedWidgetBuilder: (context, theme) {
           return new MaterialApp(
             title: 'Notes app',

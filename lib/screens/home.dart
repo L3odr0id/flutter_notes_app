@@ -30,6 +30,18 @@ class _MyHomePageState extends State<HomeScreen> {
     super.initState();
     NotesDatabaseService.db.init();
     setNotesFromDB();
+    setTheme();
+  }
+
+  setTheme() async {
+    ThemeData savedTheme = (await getCurrentTheme()).theme;
+    print("setTheme home "+savedTheme.brightness.toString());
+    if (savedTheme != null)
+      setState(() {
+        print("setting theme");
+        DynamicTheme.of(context).setBrightness(savedTheme.brightness);
+        DynamicTheme.of(context).setThemeData(savedTheme);
+      });
   }
 
   setNotesFromDB() async {
@@ -105,7 +117,7 @@ class HomeAppBar extends StatelessWidget {
 }
 
 class CustomDismissible extends StatelessWidget {
-  const CustomDismissible(
+  CustomDismissible(
       {Key key, this.index, this.nm, this.openNote, this.onDismissed})
       : super(key: key);
   final int index;

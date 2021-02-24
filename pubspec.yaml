@@ -28,6 +28,7 @@ dependencies:
   url_launcher: ^5.5.0
   path_provider: ^1.6.18
   sqflite: ^1.1.5
+  shared_preferences: ^0.5.12
 
 
   # The following adds the Cupertino Icons font to your application.
