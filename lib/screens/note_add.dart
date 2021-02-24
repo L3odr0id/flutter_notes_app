@@ -10,25 +10,23 @@ const bool NOTESCREEN_MODE_VIEW = false;
 const bool NOTESCREEN_MODE_EDIT = true;
 
 class AddNoteScreen extends StatefulWidget {
-  AddNoteScreen({Key key, this.isNew, this.nm, this.mode}) : super(key: key);
+  AddNoteScreen({Key key, this.isNew, this.oldNm, this.mode}) : super(key: key);
   final bool isNew;
-  final NotesModel nm;
-  final TextEditingController contentController = TextEditingController();
+  final NotesModel oldNm;
   final bool mode;
 
   @override
-  State<StatefulWidget> createState() => AddNoteScreenState(this, mode);
-
-  void onLoad() {
-    if (!isNew) contentController.text = nm.content;
-  }
+  State<StatefulWidget> createState() => AddNoteScreenState(this, mode, oldNm);
 }
 
 class AddNoteScreenState extends State<AddNoteScreen> {
-  AddNoteScreenState(this.widget, this.mode);
+  AddNoteScreenState(this.widget, this.mode, this.nm);
 
   final AddNoteScreen widget;
   bool mode;
+  NotesModel nm;
+
+  final TextEditingController contentController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -36,14 +34,15 @@ class AddNoteScreenState extends State<AddNoteScreen> {
 
     if (mode == NOTESCREEN_MODE_VIEW)
       screen = new ViewScreen(
-          mSetState: mSetState, getText: getText, widget: widget);
+          mSetState: mSetState, getText: getText, handleDelete: handleDelete);
     else
-      screen = new EditScreen(
-          handleSave: handleSave, backToMenu: backToMenu, widget: widget);
+      screen = new EditScreen(handleSave: handleSave, widget: this);
 
     return Scaffold(
       body: SafeArea(
-        child: screen,
+        child: Column(
+          children: [Expanded(child: screen)],
+        ),
       ),
     );
   }
@@ -51,90 +50,104 @@ class AddNoteScreenState extends State<AddNoteScreen> {
   @override
   void initState() {
     super.initState();
-    widget.onLoad();
+    onLoad();
   }
 
   String getText() {
     String res;
-    if (widget.nm != null)
-      res = widget.nm.content;
+    if (nm != null)
+      res = nm.content;
     else
       res = "";
     return res;
   }
 
+  void onLoad() {
+    if (!widget.isNew) contentController.text = nm.content;
+  }
+
   void handleSave() async {
     if (widget.isNew) {
-      if (widget.contentController.text != "") {
-        NotesModel nm = NotesModel(
-            content: widget.contentController.text, date: DateTime.now());
-        NotesDatabaseService.db.addNoteInDB(nm);
+      if (contentController.text != "") {
+        NotesModel newNm =
+            NotesModel(content: contentController.text, date: DateTime.now());
+        nm = await NotesDatabaseService.db.addNoteInDB(newNm);
       }
     } else {
-      widget.nm.content = widget.contentController.text;
-      widget.nm.date = DateTime.now();
-      NotesDatabaseService.db.updateNoteInDB(widget.nm);
+      nm.content = contentController.text;
+      nm.date = DateTime.now();
+      NotesDatabaseService.db.updateNoteInDB(nm);
     }
     mode = NOTESCREEN_MODE_VIEW;
     setState(() {});
+  }
+
+  void handleDelete() async {
+    if (nm.id != null) NotesDatabaseService.db.deleteNoteInDB(nm);
+    Navigator.pop(context, true);
   }
 
   void mSetState() {
     mode = NOTESCREEN_MODE_EDIT;
     setState(() {});
   }
-
-  void backToMenu() {
-    Navigator.pop(context);
-  }
 }
 
 class EditScreen extends StatelessWidget {
-  EditScreen({this.handleSave, this.backToMenu, this.widget});
+  EditScreen({this.handleSave, this.widget});
 
   final Function handleSave;
-  final Function backToMenu;
-  final AddNoteScreen widget;
+  final AddNoteScreenState widget;
 
   @override
   Widget build(BuildContext context) {
-    return  Column(
-          children: [
-            CustomToolbar(
-              title: 'Edit Note',
-              icon: FontAwesomeIcons.solidSave,
-              onPressed: () {
-                handleSave();
-              },
-              backToMenu: () {
-                backToMenu();
-              },
-            ),
-            CustomTextField(
-                maxLines: 50,
-                hintText: 'Note',
-                controller: widget.contentController),
-          ],
+    return Column(
+      children: [
+        CustomToolbar(
+          title: 'Edit Note',
+          icon: FontAwesomeIcons.solidSave,
+          onPressed: () {
+            handleSave();
+          },
+        ),
+        Expanded(
+          child: CustomTextField(
+              maxLines: 50,
+              hintText: 'Note',
+              controller: widget.contentController),
+        ),
+      ],
     );
   }
 }
 
 class ViewScreen extends StatelessWidget {
-  ViewScreen({this.mSetState, this.getText, this.widget});
+  ViewScreen({this.mSetState, this.getText, this.handleDelete});
 
   final Function mSetState;
   final Function getText;
-  final AddNoteScreen widget;
+  final Function handleDelete;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => mSetState(),
-      child: ReadingTextField(
-        text: getText(),
-        fontWeight: FontWeight.w400,
-        fontSize: 22,
-      ),
+    return Column(
+      children: [
+        CustomToolbar(
+          title: 'View Note',
+          icon: FontAwesomeIcons.trash,
+          onPressed: () {
+            handleDelete();
+          },
+        ),
+        GestureDetector(
+          onTap: () => mSetState(),
+          child: ReadingTextField(
+            text: getText(),
+            fontWeight: FontWeight.w400,
+            fontSize: 22,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -165,12 +178,11 @@ class CustomTextField extends StatelessWidget {
 }
 
 class CustomToolbar extends StatelessWidget {
-  CustomToolbar({this.title, this.icon, this.onPressed, this.backToMenu});
+  CustomToolbar({this.title, this.icon, this.onPressed});
 
   final String title;
   final IconData icon;
   final Function onPressed;
-  final Function backToMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +193,7 @@ class CustomToolbar extends StatelessWidget {
         children: <Widget>[
           IconButton(
             icon: Icon(Icons.arrow_back, size: 27),
-            onPressed: () => backToMenu(),
+            onPressed: () => Navigator.pop(context, true),
           ),
           Text(
             title,

@@ -17,9 +17,9 @@ class MyApp extends StatelessWidget {
         data: (brightness) => appThemeDark, //TODO Change theme: DynamicTheme.of(context).setThemeData(appThemeExperimental)
         themedWidgetBuilder: (context, theme) {
           return new MaterialApp(
-            title: 'Flutter Demo',
+            title: 'Notes app',
             theme: theme,
-            home: HomeScreen(title: 'Flutter Demo Home Page'),
+            home: HomeScreen(),
           );
         }
     );

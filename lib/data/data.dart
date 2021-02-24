@@ -50,10 +50,11 @@ class NotesDatabaseService {
         where: '_id = ?', whereArgs: [updatedNote.id]);
   }
 
-  deleteNoteInDB(NotesModel noteToDelete) async {
+  Future<bool> deleteNoteInDB(NotesModel noteToDelete) async {
     final db = await database;
-    await db.delete('Notes', where: '_id = ?', whereArgs: [noteToDelete.id]);
+    final res = await db.delete('Notes', where: '_id = ?', whereArgs: [noteToDelete.id]);
     print('Note deleted');
+    return true;
   }
 
   Future<NotesModel> addNoteInDB(NotesModel newNote) async {

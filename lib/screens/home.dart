@@ -13,9 +13,7 @@ import 'note_view.dart';
 import 'settings.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({Key key, this.title}) : super(key: key);
-
-  final String title;
+  HomeScreen({Key key}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -25,6 +23,8 @@ class _MyHomePageState extends State<HomeScreen> {
   ThemeData theme = appThemeLight;
   List<NotesModel> notesList = [];
 
+  bool _inDeletion = false;
+
   @override
   void initState() {
     super.initState();
@@ -33,8 +33,11 @@ class _MyHomePageState extends State<HomeScreen> {
   }
 
   setNotesFromDB() async {
-    var fetchedNotes = await NotesDatabaseService.db.getNotesFromDB();
-    notesList = fetchedNotes;
+    if (!_inDeletion) {
+      var fetchedNotes = await NotesDatabaseService.db.getNotesFromDB();
+      notesList = fetchedNotes;
+    } else
+      print("Skip notes list update due to deletion");
     setState(() {});
   }
 
@@ -45,18 +48,36 @@ class _MyHomePageState extends State<HomeScreen> {
         child: Column(
           children: <Widget>[
             HomeAppBar(),
-            CustomListView(notesList: notesList),
+            CustomListView(
+                notesList: notesList,
+                openNote: openNote,
+                onDismissed: dismissNote),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(FontAwesomeIcons.plus),
-        onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => AddNoteScreen(isNew: true, mode: NOTESCREEN_MODE_EDIT))),
-      ),
+          child: Icon(FontAwesomeIcons.plus),
+          onPressed: () => openNote(NOTESCREEN_MODE_EDIT, null, true)),
     );
+  }
+
+  void openNote(bool mode, NotesModel nm, bool isNew) async {
+    final res = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                AddNoteScreen(oldNm: nm, isNew: isNew, mode: mode)));
+    if (res) {
+      setNotesFromDB();
+      setState(() {});
+    }
+  }
+
+  dismissNote(NotesModel nm) async {
+    _inDeletion = true;
+    _inDeletion = !(await NotesDatabaseService.db.deleteNoteInDB(nm));
+    notesList.remove(nm);
+    setState(() {});
   }
 }
 
@@ -84,16 +105,20 @@ class HomeAppBar extends StatelessWidget {
 }
 
 class CustomDismissible extends StatelessWidget {
-  const CustomDismissible({Key key, this.index, this.nm}) : super(key: key);
+  const CustomDismissible(
+      {Key key, this.index, this.nm, this.openNote, this.onDismissed})
+      : super(key: key);
   final int index;
   final NotesModel nm;
+  final Function openNote;
+  final Function onDismissed;
 
   @override
   Widget build(BuildContext context) {
     return Dismissible(
       key: ValueKey(index),
       direction: DismissDirection.endToStart,
-      child: Card(child: NoteListItem(index, nm)),
+      child: Card(child: NoteListItem(index, nm, openNote)),
       background: Padding(
         padding: EdgeInsets.only(right: 30),
         child: Align(
@@ -102,8 +127,8 @@ class CustomDismissible extends StatelessWidget {
               color: Colors.red.shade500, size: 28),
         ),
       ),
-      onDismissed: (direction) => () async {
-        await NotesDatabaseService.db.deleteNoteInDB(nm);
+      onDismissed: (direction) {
+        onDismissed(nm);
       },
       confirmDismiss: (direction) => showDialog(
           context: context, builder: (context) => CustomAlertDialog()),
@@ -113,8 +138,11 @@ class CustomDismissible extends StatelessWidget {
 
 class CustomListView extends StatelessWidget {
   final List<NotesModel> notesList;
+  final Function openNote;
+  final Function onDismissed;
 
-  CustomListView({Key key, this.notesList}) : super(key: key);
+  CustomListView({Key key, this.notesList, this.openNote, this.onDismissed})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -123,18 +151,23 @@ class CustomListView extends StatelessWidget {
         padding: EdgeInsets.all(10),
         physics: BouncingScrollPhysics(),
         itemCount: notesList.length,
-        itemBuilder: (context, index) =>
-            CustomDismissible(index: index, nm: notesList[index]),
+        itemBuilder: (context, index) => CustomDismissible(
+          index: index,
+          nm: notesList[index],
+          openNote: openNote,
+          onDismissed: onDismissed,
+        ),
       ),
     );
   }
 }
 
 class NoteListItem extends StatelessWidget {
-  NoteListItem(this.index, this.nm);
+  NoteListItem(this.index, this.nm, this.openNote);
 
   final int index;
   final NotesModel nm;
+  final Function openNote;
 
   String getTitleFromModel(NotesModel nm) {
     List<String> a = nm.content.split("\n");
@@ -175,8 +208,7 @@ class NoteListItem extends StatelessWidget {
           color: Theme.of(context).accentColor,
         ),
       ),
-      onTap: () => Navigator.push(
-          context, MaterialPageRoute(builder: (context) => AddNoteScreen(nm: nm, isNew: false, mode: NOTESCREEN_MODE_VIEW))),
+      onTap: () => openNote(NOTESCREEN_MODE_VIEW, nm, false),
       contentPadding: EdgeInsets.all(17),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
