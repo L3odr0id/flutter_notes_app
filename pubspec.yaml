@@ -29,6 +29,9 @@ dependencies:
   path_provider: ^1.6.18
   sqflite: ^1.1.5
   shared_preferences: ^0.5.12
+  speech_to_text: ^3.1.0
+  avatar_glow: ^1.2.0
+  keyboard_visibility: any
 
 
   # The following adds the Cupertino Icons font to your application.

@@ -9,7 +9,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trpp/widgets/custom_alert_dialog.dart';
 
 import 'note_add.dart';
-import 'note_view.dart';
+import 'voice.dart';
 import 'settings.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -79,7 +79,7 @@ class _MyHomePageState extends State<HomeScreen> {
         MaterialPageRoute(
             builder: (context) =>
                 AddNoteScreen(oldNm: nm, isNew: isNew, mode: mode)));
-    if (res) {
+    if (res != null && res) {
       setNotesFromDB();
       setState(() {});
     }
