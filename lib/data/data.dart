@@ -27,6 +27,8 @@ class NotesDatabaseService {
         onCreate: (Database db, int version) async {
       await db.execute(
           'CREATE TABLE Notes (_id INTEGER PRIMARY KEY, content TEXT, date TEXT);');
+      await db.execute(
+          'CREATE TABLE Notifications (_id INTEGER PRIMARY KEY, note INTEGER, data TEXT);');
       print('New table created at $path');
     });
   }
@@ -44,16 +46,42 @@ class NotesDatabaseService {
     return notesList;
   }
 
+  Future<List<NotificationModel>> getNotificationsFromDB() async {
+    final db = await database;
+    List<NotificationModel> notesList = [];
+    List<Map> maps =
+    await db.query('Notifications', columns: ['_id', 'note', 'data']);
+    if (maps.length > 0) {
+      maps.forEach((map) {
+        notesList.add(NotificationModel.fromMap(map));
+      });
+    }
+    return notesList;
+  }
+
   updateNoteInDB(NotesModel updatedNote) async {
     final db = await database;
     await db.update('Notes', updatedNote.toMap(),
         where: '_id = ?', whereArgs: [updatedNote.id]);
   }
 
+  updateNotificationInDB(NotificationModel updatedNotification)async{
+    final db = await database;
+    await db.update('Notifications', updatedNotification.toMap(),
+        where: '_id = ?', whereArgs: [updatedNotification.id]);
+  }
+
   Future<bool> deleteNoteInDB(NotesModel noteToDelete) async {
     final db = await database;
     final res = await db.delete('Notes', where: '_id = ?', whereArgs: [noteToDelete.id]);
     print('Note deleted');
+    return true;
+  }
+
+  Future<bool> deleteNotificationInDB(NotificationModel noteToDelete) async {
+    final db = await database;
+    final res = await db.delete('Notifications', where: '_id = ?', whereArgs: [noteToDelete.id]);
+    print('Notification deleted');
     return true;
   }
 
@@ -65,6 +93,17 @@ class NotesDatabaseService {
     });
     newNote.id = id;
     print('Note added: ${newNote.content}');
+    return newNote;
+  }
+
+  Future<NotificationModel> addNotificationInDB(NotificationModel newNote) async {
+    final db = await database;
+    int id = await db.transaction((transaction) {
+      return transaction.rawInsert(
+          'INSERT into Notifications(note, data) VALUES ( "${newNote.note}", "${newNote.data}");');
+    });
+    newNote.id = id;
+    print('Notification added: ${newNote.data}');
     return newNote;
   }
 }
@@ -86,7 +125,29 @@ class NotesModel {
     return <String, dynamic>{
       '_id': this.id,
       'content': this.content,
-      'date': this.date.toIso8601String()
+      'date': this.date.toIso8601String(),
+    };
+  }
+}
+
+class NotificationModel{
+  int id;
+  int note;
+  String data;
+
+  NotificationModel({this.id, this.note, this.data});
+
+  NotificationModel.fromMap(Map<String, dynamic> map) {
+    this.id = map['_id'];
+    this.note = map['note'];
+    this.data = map['data'];
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      '_id': this.id,
+      'note': this.note,
+      'data': this.data,
     };
   }
 }

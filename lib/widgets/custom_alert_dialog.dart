@@ -14,7 +14,7 @@ class CustomAlertDialog extends StatelessWidget {
 
     return AlertDialog(
       title: Text('Confirm delete'),
-      content: Text('Do you really want to delete this note?'),
+      content: Text('Do you really want to delete this?'),
       actions: <Widget>[
         myFlatButton('Delete', Colors.redAccent, true),
         myFlatButton('Cancel', Colors.grey, false),

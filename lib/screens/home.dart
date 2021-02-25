@@ -8,8 +8,8 @@ import 'package:trpp/data/theme.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trpp/widgets/custom_alert_dialog.dart';
 
-import 'note_add.dart';
-import 'voice.dart';
+import 'note.dart';
+import 'notifications/notifications.dart';
 import 'settings.dart';
 
 class HomeScreen extends StatefulWidget {

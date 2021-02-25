@@ -7,7 +7,7 @@ import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:trpp/data/data.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
-import 'voice.dart';
+import 'notifications/notifications.dart';
 
 const bool NOTESCREEN_MODE_VIEW = false;
 const bool NOTESCREEN_MODE_EDIT = true;
@@ -19,13 +19,15 @@ class AddNoteScreen extends StatefulWidget {
   final bool mode;
 
   @override
-  State<StatefulWidget> createState() => AddNoteScreenState(this, mode, oldNm);
+  State<StatefulWidget> createState() =>
+      AddNoteScreenState(this, mode, oldNm, isNew);
 }
 
 class AddNoteScreenState extends State<AddNoteScreen> {
-  AddNoteScreenState(this.widget, this.mode, this.nm);
+  AddNoteScreenState(this.widget, this.mode, this.nm, this.isNew);
 
   final AddNoteScreen widget;
+  bool isNew;
   bool mode;
   NotesModel nm;
 
@@ -51,21 +53,22 @@ class AddNoteScreenState extends State<AddNoteScreen> {
           children: [Expanded(child: screen)],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Visibility(
-        child: AvatarGlow(
-          animate: _isListening,
-          glowColor: Theme.of(context).primaryColor,
-          endRadius: 75.0,
-          duration: const Duration(milliseconds: 2000),
-          repeatPauseDuration: const Duration(milliseconds: 100),
-          repeat: true,
-          child: FloatingActionButton(
-            onPressed: _listen,
-            child: Icon(_isListening ? Icons.mic : Icons.mic_none),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButton: Row(
+        children: [
+          MicrophoneButton(
+            isListening: _isListening,
+            listen: _listen,
+            keyboardIsUp: keyboardIsUp,
           ),
-        ),
-        visible: !keyboardIsUp,
+          FloatingActionButton(
+            child: Icon(FontAwesomeIcons.bell),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => NotificationsScreen()),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -73,10 +76,17 @@ class AddNoteScreenState extends State<AddNoteScreen> {
   @override
   void initState() {
     super.initState();
-    if (!widget.isNew) contentController.text = nm.content;
+    if (!isNew) contentController.text = nm.content;
     _speech = stt.SpeechToText();
     KeyboardVisibilityNotification().addNewListener(
       onChange: (bool visible) {
+        if (!visible && mode == NOTESCREEN_MODE_EDIT) {
+          if (isNew)
+            addNewNote();
+          else
+            updateNote();
+        }
+
         keyboardIsUp = visible;
         setState(() {});
       },
@@ -93,16 +103,12 @@ class AddNoteScreenState extends State<AddNoteScreen> {
   }
 
   void handleSave() async {
-    if (widget.isNew) {
+    if (isNew) {
       if (contentController.text != "") {
-        NotesModel newNm =
-            NotesModel(content: contentController.text, date: DateTime.now());
-        nm = await NotesDatabaseService.db.addNoteInDB(newNm);
+        addNewNote();
       }
     } else {
-      nm.content = contentController.text;
-      nm.date = DateTime.now();
-      NotesDatabaseService.db.updateNoteInDB(nm);
+      updateNote();
     }
     mode = NOTESCREEN_MODE_VIEW;
     setState(() {});
@@ -118,6 +124,19 @@ class AddNoteScreenState extends State<AddNoteScreen> {
     setState(() {});
   }
 
+  void addNewNote() async {
+    NotesModel newNm =
+        NotesModel(content: contentController.text, date: DateTime.now());
+    nm = await NotesDatabaseService.db.addNoteInDB(newNm);
+    isNew = false;
+  }
+
+  void updateNote() {
+    nm.content = contentController.text;
+    nm.date = DateTime.now();
+    NotesDatabaseService.db.updateNoteInDB(nm);
+  }
+
   void _listen() async {
     if (!_isListening) {
       bool available = await _speech.initialize(
@@ -128,11 +147,18 @@ class AddNoteScreenState extends State<AddNoteScreen> {
         setState(() => _isListening = true);
         _speech.listen(
           onResult: (val) => setState(() {
-            if (mode == NOTESCREEN_MODE_VIEW)
+            if (mode == NOTESCREEN_MODE_VIEW) {
               nm.content += val.recognizedWords;
-            else
+              contentController.text = nm.content;
+              NotesDatabaseService.db.updateNoteInDB(nm);
+            } else {
               contentController.text += val.recognizedWords;
 
+              if (isNew)
+                addNewNote();
+              else
+                updateNote();
+            }
             //if (val.hasConfidenceRating && val.confidence > 0) {
             //_confidence = val.confidence;
             //}
@@ -256,6 +282,34 @@ class CustomToolbar extends StatelessWidget {
           IconButton(icon: Icon(icon, size: 22), onPressed: onPressed),
         ],
       ),
+    );
+  }
+}
+
+class MicrophoneButton extends StatelessWidget {
+  final bool isListening;
+  final Function listen;
+  final bool keyboardIsUp;
+
+  MicrophoneButton({this.isListening, this.listen, this.keyboardIsUp});
+
+  @override
+  Widget build(BuildContext context) {
+    return Visibility(
+      child: AvatarGlow(
+        animate: isListening,
+        glowColor: Theme.of(context).primaryColor,
+        endRadius: 75.0,
+        duration: const Duration(milliseconds: 2000),
+        repeatPauseDuration: const Duration(milliseconds: 100),
+        repeat: true,
+        child: FloatingActionButton(
+          heroTag: null,
+          onPressed: listen,
+          child: Icon(isListening ? Icons.mic : Icons.mic_none),
+        ),
+      ),
+      visible: !keyboardIsUp,
     );
   }
 }
