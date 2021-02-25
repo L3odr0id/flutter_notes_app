@@ -32,6 +32,7 @@ dependencies:
   speech_to_text: ^3.1.0
   avatar_glow: ^1.2.0
   keyboard_visibility: any
+  slide_popup_dialog: ^0.0.2
 
 
   # The following adds the Cupertino Icons font to your application.

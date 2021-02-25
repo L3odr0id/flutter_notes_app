@@ -59,7 +59,13 @@ class _MyHomePageState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            HomeAppBar(),
+            //HomeAppBar(),
+            CustomToolbar(
+              needBackBtn: false,
+              title: "Home",
+              icon: FontAwesomeIcons.cog,
+              onPressed: openSettings,
+            ),
             CustomListView(
                 notesList: notesList,
                 openNote: openNote,
@@ -67,10 +73,19 @@ class _MyHomePageState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-          child: Icon(FontAwesomeIcons.plus),
-          onPressed: () => openNote(NOTESCREEN_MODE_EDIT, null, true)),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.all(8),
+        child: FloatingActionButton(
+            child: Icon(FontAwesomeIcons.plus),
+            onPressed: () => openNote(NOTESCREEN_MODE_EDIT, null, true)),
+      ),
     );
+  }
+
+  void openSettings(){
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => SettingsScreen()));
   }
 
   void openNote(bool mode, NotesModel nm, bool isNew) async {
@@ -93,6 +108,7 @@ class _MyHomePageState extends State<HomeScreen> {
   }
 }
 
+// TODO delete deprecated class
 class HomeAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

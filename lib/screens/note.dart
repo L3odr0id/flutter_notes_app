@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +8,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:trpp/data/data.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:trpp/widgets/popup_dialog.dart';
 
 import 'notifications/notifications.dart';
 
@@ -37,6 +40,10 @@ class AddNoteScreenState extends State<AddNoteScreen> {
 
   final TextEditingController contentController = TextEditingController();
 
+  AddNotificationDialog addNotificationDialog;
+  NotificationModel notificationModel;
+  bool isNotificationNew;
+
   @override
   Widget build(BuildContext context) {
     StatelessWidget screen;
@@ -53,22 +60,26 @@ class AddNoteScreenState extends State<AddNoteScreen> {
           children: [Expanded(child: screen)],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      floatingActionButton: Row(
-        children: [
-          MicrophoneButton(
-            isListening: _isListening,
-            listen: _listen,
-            keyboardIsUp: keyboardIsUp,
-          ),
-          FloatingActionButton(
-            child: Icon(FontAwesomeIcons.bell),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => NotificationsScreen()),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(right: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            MicrophoneButton(
+              isListening: _isListening,
+              listen: _listen,
+              keyboardIsUp: keyboardIsUp,
             ),
-          ),
-        ],
+            Visibility(
+              child: FloatingActionButton(
+                child: Icon(FontAwesomeIcons.bell),
+                onPressed: () => addNotificationDialog.showDialog(),
+              ),
+              visible: !keyboardIsUp,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -86,11 +97,39 @@ class AddNoteScreenState extends State<AddNoteScreen> {
           else
             updateNote();
         }
-
         keyboardIsUp = visible;
         setState(() {});
       },
     );
+
+    addNotificationDialog = AddNotificationDialog(context, getResFromPicker);
+
+    getNotificationModel();
+  }
+
+  getNotificationModel()async{
+    if (isNew) {
+      isNotificationNew = true;
+      notificationModel = NotificationModel();
+    }else {
+      List<NotificationModel> listNM = await NotesDatabaseService.db
+          .getNotificationForNote(nm.id);
+      if (listNM.isEmpty){
+        isNotificationNew = true;
+        notificationModel = NotificationModel(note: nm.id);
+      }else{
+        notificationModel = listNM.first;
+        isNotificationNew = false;
+      }
+    }
+  }
+
+  void getResFromPicker(DateTime dateTime, bool delete){
+    notificationModel.makeData(dateTime, delete);
+    if (isNotificationNew)
+      NotesDatabaseService.db.addNotificationInDB(notificationModel);
+    else
+      NotesDatabaseService.db.updateNotificationInDB(notificationModel);
   }
 
   String getText() {
@@ -129,6 +168,7 @@ class AddNoteScreenState extends State<AddNoteScreen> {
         NotesModel(content: contentController.text, date: DateTime.now());
     nm = await NotesDatabaseService.db.addNoteInDB(newNm);
     isNew = false;
+    notificationModel.note = nm.id;
   }
 
   void updateNote() {
@@ -258,11 +298,13 @@ class CustomTextField extends StatelessWidget {
 }
 
 class CustomToolbar extends StatelessWidget {
-  CustomToolbar({this.title, this.icon, this.onPressed});
+  CustomToolbar(
+      {this.title, this.icon, this.onPressed, this.needBackBtn = true});
 
   final String title;
   final IconData icon;
   final Function onPressed;
+  final bool needBackBtn;
 
   @override
   Widget build(BuildContext context) {
@@ -271,9 +313,12 @@ class CustomToolbar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          IconButton(
-            icon: Icon(Icons.arrow_back, size: 27),
-            onPressed: () => Navigator.pop(context, true),
+          Visibility(
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, size: 27),
+              onPressed: () => Navigator.pop(context, true),
+            ),
+            visible: needBackBtn,
           ),
           Text(
             title,

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:math';
@@ -23,12 +25,13 @@ class NotesDatabaseService {
     path = join(path, 'notes.db');
     print("Entered path $path");
 
+
     return await openDatabase(path, version: 1,
         onCreate: (Database db, int version) async {
       await db.execute(
           'CREATE TABLE Notes (_id INTEGER PRIMARY KEY, content TEXT, date TEXT);');
       await db.execute(
-          'CREATE TABLE Notifications (_id INTEGER PRIMARY KEY, note INTEGER, data TEXT);');
+          'CREATE TABLE Notifications (_id INTEGER PRIMARY KEY, note INTEGER, date1 TEXT);');
       print('New table created at $path');
     });
   }
@@ -50,7 +53,20 @@ class NotesDatabaseService {
     final db = await database;
     List<NotificationModel> notesList = [];
     List<Map> maps =
-    await db.query('Notifications', columns: ['_id', 'note', 'data']);
+    await db.query('Notifications', columns: ['_id', 'note', 'date1']);
+    if (maps.length > 0) {
+      maps.forEach((map) {
+        notesList.add(NotificationModel.fromMap(map));
+      });
+    }
+    return notesList;
+  }
+
+  Future<List<NotificationModel>> getNotificationForNote(int id) async {
+    final db = await database;
+    List<NotificationModel> notesList = [];
+    List<Map> maps =
+    await db.query('Notifications', columns: ['_id', 'note', 'date1'], where: "note = ?", whereArgs: [id]);
     if (maps.length > 0) {
       maps.forEach((map) {
         notesList.add(NotificationModel.fromMap(map));
@@ -100,10 +116,10 @@ class NotesDatabaseService {
     final db = await database;
     int id = await db.transaction((transaction) {
       return transaction.rawInsert(
-          'INSERT into Notifications(note, data) VALUES ( "${newNote.note}", "${newNote.data}");');
+          'INSERT into Notifications(note, date1) VALUES ( "${newNote.note}", "${newNote.date1}");');
     });
     newNote.id = id;
-    print('Notification added: ${newNote.data}');
+    print('Notification added: ${newNote.date1}');
     return newNote;
   }
 }
@@ -133,21 +149,26 @@ class NotesModel {
 class NotificationModel{
   int id;
   int note;
-  String data;
+  String date1;
 
-  NotificationModel({this.id, this.note, this.data});
+  NotificationModel({this.id, this.note, this.date1});
 
   NotificationModel.fromMap(Map<String, dynamic> map) {
     this.id = map['_id'];
     this.note = map['note'];
-    this.data = map['data'];
+    this.date1 = map['date1'];
   }
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       '_id': this.id,
       'note': this.note,
-      'data': this.data,
+      'date1': this.date1,
     };
   }
+
+  makeData(DateTime dateTime, bool delete){
+    date1 = dateTime.toIso8601String();
+  }
+
 }
