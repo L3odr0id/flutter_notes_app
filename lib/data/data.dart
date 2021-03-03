@@ -25,7 +25,6 @@ class NotesDatabaseService {
     path = join(path, 'notes.db');
     print("Entered path $path");
 
-
     return await openDatabase(path, version: 1,
         onCreate: (Database db, int version) async {
       await db.execute(
@@ -53,7 +52,7 @@ class NotesDatabaseService {
     final db = await database;
     List<NotificationModel> notesList = [];
     List<Map> maps =
-    await db.query('Notifications', columns: ['_id', 'note', 'date1']);
+        await db.query('Notifications', columns: ['_id', 'note', 'date1']);
     if (maps.length > 0) {
       maps.forEach((map) {
         notesList.add(NotificationModel.fromMap(map));
@@ -65,8 +64,8 @@ class NotesDatabaseService {
   Future<List<NotificationModel>> getNotificationForNote(int id) async {
     final db = await database;
     List<NotificationModel> notesList = [];
-    List<Map> maps =
-    await db.query('Notifications', columns: ['_id', 'note', 'date1'], where: "note = ?", whereArgs: [id]);
+    List<Map> maps = await db.query('Notifications',
+        columns: ['_id', 'note', 'date1'], where: "note = ?", whereArgs: [id]);
     if (maps.length > 0) {
       maps.forEach((map) {
         notesList.add(NotificationModel.fromMap(map));
@@ -81,7 +80,7 @@ class NotesDatabaseService {
         where: '_id = ?', whereArgs: [updatedNote.id]);
   }
 
-  updateNotificationInDB(NotificationModel updatedNotification)async{
+  updateNotificationInDB(NotificationModel updatedNotification) async {
     final db = await database;
     await db.update('Notifications', updatedNotification.toMap(),
         where: '_id = ?', whereArgs: [updatedNotification.id]);
@@ -89,14 +88,16 @@ class NotesDatabaseService {
 
   Future<bool> deleteNoteInDB(NotesModel noteToDelete) async {
     final db = await database;
-    final res = await db.delete('Notes', where: '_id = ?', whereArgs: [noteToDelete.id]);
+    final res = await db
+        .delete('Notes', where: '_id = ?', whereArgs: [noteToDelete.id]);
     print('Note deleted');
     return true;
   }
 
   Future<bool> deleteNotificationInDB(NotificationModel noteToDelete) async {
     final db = await database;
-    final res = await db.delete('Notifications', where: '_id = ?', whereArgs: [noteToDelete.id]);
+    final res = await db.delete('Notifications',
+        where: '_id = ?', whereArgs: [noteToDelete.id]);
     print('Notification deleted');
     return true;
   }
@@ -112,7 +113,8 @@ class NotesDatabaseService {
     return newNote;
   }
 
-  Future<NotificationModel> addNotificationInDB(NotificationModel newNote) async {
+  Future<NotificationModel> addNotificationInDB(
+      NotificationModel newNote) async {
     final db = await database;
     int id = await db.transaction((transaction) {
       return transaction.rawInsert(
@@ -159,15 +161,16 @@ class NotesModel {
   }
 }
 
-class NotificationModel{
+class NotificationModel {
   int id;
   int note;
   String date1;
 
   NotificationModel({this.id, this.note, this.date1});
 
-  NotificationModel.fromMap(Map<dynamic, dynamic> map) {
+  NotificationModel.fromMap(Map<String, dynamic> map) {
     this.id = map['_id'];
+    print(map['note']);
     this.note = map['note'];
     this.date1 = map['date1'];
   }
@@ -180,16 +183,14 @@ class NotificationModel{
     };
   }
 
-  makeData(DateTime dateTime){
+  makeData(DateTime dateTime) {
     date1 = dateTime.toIso8601String();
   }
 
-  String getString(){
+  String getString() {
     DateTime time = DateTime.parse(date1);
     String month = time.month.toString();
-    if (month.length == 1)
-      month = "0"+month;
+    if (month.length == 1) month = "0" + month;
     return "Notify ${time.day}.$month at ${time.hour}:${time.minute}";
   }
-
 }

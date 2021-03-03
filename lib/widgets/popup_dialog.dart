@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:slide_popup_dialog/slide_popup_dialog.dart' as slideDialog;
@@ -9,7 +8,6 @@ import 'package:trpp/data/data.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:trpp/screens/note.dart';
-
 
 class AddNotificationDialog {
   BuildContext _context;
@@ -21,8 +19,6 @@ class AddNotificationDialog {
 
 //  NotificationModel notificationModel;
   //bool isNotificationNew;
-
-  NotesModel notesModel;
 
   AddNoteScreenState parent;
 
@@ -36,7 +32,6 @@ class AddNotificationDialog {
     _chosenDelete = _isSwitched;
 
     initTimeZone();
-    notesModel = nm;
   }
 
   void initTimeZone() async {
@@ -60,8 +55,18 @@ class AddNotificationDialog {
               style: TextStyle(
                   fontSize: 24, color: Theme.of(_context).primaryColor)),
           _picker2(),
-          _removeBtn(),
-          _okBtn(),
+          Stack(
+            children: <Widget>[
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: _removeBtn(),
+              ),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: _okBtn(),
+              ),
+            ],
+          )
         ],
       ),
     );
@@ -79,7 +84,7 @@ class AddNotificationDialog {
           ),
         ),
         child: CupertinoDatePicker(
-          initialDateTime: DateTime.now(),
+          initialDateTime: getInitialDateTime(),
           onDateTimeChanged: (dateTime) {
             _chosenTime = dateTime;
           },
@@ -89,6 +94,13 @@ class AddNotificationDialog {
       width: 400,
       height: 300,
     );
+  }
+
+  DateTime getInitialDateTime() {
+    if (parent.notificationModel != null)
+      return DateTime.parse(parent.notificationModel.date1);
+    else
+      return DateTime.now();
   }
 
   Widget _switchToDelete() {
@@ -102,74 +114,91 @@ class AddNotificationDialog {
   }
 
   Widget _okBtn() {
-    return OutlineButton(
-      onPressed: () {
-        Navigator.of(_context).pop();
-        saveNotification();
-        getResult(_chosenTime, _chosenDelete);
-      },
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Text(
-        'Ok',
-        style: TextStyle(fontSize: 14, color: Theme.of(_context).primaryColor),
+    return Padding(
+      padding: EdgeInsets.only(right: 24),
+      child: OutlineButton(
+        onPressed: () {
+          Navigator.of(_context).pop();
+          saveNotification();
+          getResult(_chosenTime, _chosenDelete);
+        },
+        highlightedBorderColor: Theme.of(_context).accentColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Text(
+          'OK',
+          style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+              color: Theme.of(_context).accentColor),
+        ),
       ),
     );
   }
 
   Widget _removeBtn() {
-    return OutlineButton(
+    return Padding(
+      padding: EdgeInsets.only(left: 24),
+      child: OutlineButton(
         onPressed: () {
           Navigator.of(_context).pop();
           cancelScheduledNotification();
         },
+        highlightedBorderColor: Theme.of(_context).accentColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Text(
-          'Cancel notification',
-          style: TextStyle(fontSize: 14, color: Theme.of(_context).primaryColor),
-        ),);
+          'Cancel',
+          style: TextStyle(fontSize: 14, color: Theme.of(_context).errorColor),
+        ),
+      ),
+    );
   }
 
   scheduleNotification() async {
-    FlutterLocalNotificationsPlugin plugin = FlutterLocalNotificationsPlugin();
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('ic_launcher');
-    final IOSInitializationSettings initializationSettingsIOS =
-        IOSInitializationSettings(
-            onDidReceiveLocalNotification: onDidReceiveLocalNotification);
-    final MacOSInitializationSettings initializationSettingsMacOS =
-        MacOSInitializationSettings();
-    final InitializationSettings initializationSettings =
-        InitializationSettings(
-            android: initializationSettingsAndroid,
-            iOS: initializationSettingsIOS,
-            macOS: initializationSettingsMacOS);
-    await plugin.initialize(initializationSettings,
-        onSelectNotification: selectNotification);
-    if (getTime().isAfter(DateTime.now())) {
-      print("scheduled to:" + parent.notificationModel.date1);
-      await plugin.zonedSchedule(
-          parent.notificationModel.id,
-          notesModel.getTitleFromModel(8),
-          notesModel.getShortDesc(16),
-          getTime(),
-          const NotificationDetails(
-              android: AndroidNotificationDetails('your channel id',
-                  'Notifications', 'Channel for your alarms')),
-          androidAllowWhileIdle: true,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime);
+    if (parent.nm != null) {
+      FlutterLocalNotificationsPlugin plugin =
+          FlutterLocalNotificationsPlugin();
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('ic_launcher');
+      final IOSInitializationSettings initializationSettingsIOS =
+          IOSInitializationSettings(
+              onDidReceiveLocalNotification: onDidReceiveLocalNotification);
+      final MacOSInitializationSettings initializationSettingsMacOS =
+          MacOSInitializationSettings();
+      final InitializationSettings initializationSettings =
+          InitializationSettings(
+              android: initializationSettingsAndroid,
+              iOS: initializationSettingsIOS,
+              macOS: initializationSettingsMacOS);
+      await plugin.initialize(initializationSettings,
+          onSelectNotification: selectNotification);
+      if (getTime().isAfter(DateTime.now())) {
+        print("scheduled to:" + parent.notificationModel.date1);
+        await plugin.zonedSchedule(
+            parent.notificationModel.note,
+            parent.nm.getTitleFromModel(16),
+            parent.nm.getShortDesc(24),
+            getTime(),
+            const NotificationDetails(
+                android: AndroidNotificationDetails('your channel id',
+                    'Notifications', 'Channel for your alarms')),
+            androidAllowWhileIdle: true,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime);
+      }
     }
   }
 
   void cancelScheduledNotification() {
     print("Cancel");
-    if (parent.notificationModel.id != null) {
-      FlutterLocalNotificationsPlugin plugin =
-          FlutterLocalNotificationsPlugin();
-      plugin.cancel(parent.notificationModel.id);
-      NotesDatabaseService.db.deleteNotificationInDB(parent.notificationModel);
-      parent.isNotificationNew = true;
-      parent.isNotificationNew = true;
+    if (parent.notificationModel != null) {
+      if (parent.notificationModel.id != null) {
+        FlutterLocalNotificationsPlugin plugin =
+            FlutterLocalNotificationsPlugin();
+        plugin.cancel(parent.notificationModel.note);
+        NotesDatabaseService.db
+            .deleteNotificationInDB(parent.notificationModel);
+        parent.notificationModel = null;
+      }
     }
   }
 
@@ -180,13 +209,12 @@ class AddNotificationDialog {
 
   saveNotification() async {
     cancelScheduledNotification();
+    parent.notificationModel = new NotificationModel();
     parent.notificationModel.makeData(_chosenTime);
-    if (parent.isNotificationNew)
-      parent.notificationModel = await NotesDatabaseService.db
-          .addNotificationInDB(parent.notificationModel);
-
-    if (parent.isNotificationNew && parent.notificationModel.id != null)
-      scheduleNotification();
+    if (parent.nm != null) parent.notificationModel.note = parent.nm.id;
+    parent.notificationModel = await NotesDatabaseService.db
+        .addNotificationInDB(parent.notificationModel);
+    if (parent.notificationModel.id != null) scheduleNotification();
   }
 
   // ignore: missing_return

@@ -4,32 +4,33 @@ import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trpp/data/theme.dart';
+import 'package:trpp/screens/note.dart';
+import 'package:trpp/widgets/toolbar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
-  SettingsScreen({Key key, this.title, changeTheme}) : super(key: key);
+  SettingsScreen({Key key, this.title}) : super(key: key);
 
-  final String title;
+  final TupleTheme title;
 
   @override
-  SettingsScreenState createState() => SettingsScreenState();
+  SettingsScreenState createState() => SettingsScreenState(title);
 }
 
 class SettingsScreenState extends State<SettingsScreen> {
   TupleTheme dropdownValue;
+  SettingsScreenState(TupleTheme theme){
+    for (int i=0;i<ThemeNames.length;++i)
+      if (ThemeNames[i].name == theme.name)
+        dropdownValue = ThemeNames[i];
+  }
 
   @override
   void initState() {
     super.initState();
-    getDropDownValue();
   }
 
-  getDropDownValue() async {
-    dropdownValue = await getCurrentTheme();
-    setState(() {});
-  }
-
-  setTheme(String name) async {
+  saveTheme(String name) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('theme', name);
   }
@@ -37,31 +38,56 @@ class SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: ListView(
-      physics: BouncingScrollPhysics(),
-      children: <Widget>[
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          //physics: BouncingScrollPhysics(), ListView
           children: <Widget>[
-            toolBar(),
-            topCard(),
+            Column(
+              //crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                //toolBar(),
+                CustomToolbar(
+                  title: "Settings",
+                ),
+                topCard(),
+              ],
+            ),
+            Align(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  buildCardWidget(
+                    Column(
+                      //crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Align(
+                          child: Text('About app',
+                              style: TextStyle(
+                                  fontSize: 24,
+                                  color: Theme.of(context).primaryColor)),
+                          alignment: Alignment.topLeft,
+                        ),
+                        Container(
+                          height: 40,
+                        ),
+                        gitButton(),
+                        flutterLogo(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              alignment: Alignment.bottomCenter,
+            )
           ],
         ),
-        buildCardWidget(Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Text('About app',
-                style: TextStyle(
-                    fontSize: 24, color: Theme.of(context).primaryColor)),
-            Container(
-              height: 40,
-            ),
-            gitButton(),
-            flutterLogo(),
-          ],
-        ))
-      ],
-    ));
+      ),
+      backgroundColor: Theme.of(context).backgroundColor,
+    );
   }
 
   Widget buildCardWidget(Widget child) {
@@ -81,22 +107,10 @@ class SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget toolBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        IconButton(
-          icon: Icon(Icons.arrow_back, size: 27),
-          onPressed: () => Navigator.pop(context, false),
-        ),
-      ],
-    );
-  }
-
   Widget dropDownItem() {
     return DropdownButton<TupleTheme>(
       value: dropdownValue,
-      icon: Icon(FontAwesomeIcons.caretDown),
+      icon: Icon(FontAwesomeIcons.caretDown, color: Theme.of(context).accentColor,),
       iconSize: 16,
       elevation: 16,
       style: TextStyle(color: Theme.of(context).primaryColor),
@@ -109,12 +123,14 @@ class SettingsScreenState extends State<SettingsScreen> {
           dropdownValue = newValue;
           DynamicTheme.of(context).setThemeData(newValue.theme);
         });
-        setTheme(newValue.name);
+        saveTheme(newValue.name);
       },
       items: ThemeNames.map<DropdownMenuItem<TupleTheme>>((TupleTheme value) {
         return DropdownMenuItem<TupleTheme>(
           value: value,
-          child: Text(value.name),
+          child: Text(value.name,
+              style: TextStyle(
+                  fontSize: 16, color: Theme.of(context).primaryColor)),
         );
       }).toList(),
     );
@@ -125,11 +141,15 @@ class SettingsScreenState extends State<SettingsScreen> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text('App Theme', style: TextStyle(fontSize: 24)),
+          Text('App Theme', style: TextStyle(fontSize: 24, color: Theme.of(context).primaryColor)),
           Container(
             height: 20,
           ),
-          dropDownItem(),
+          Align(
+            alignment: Alignment.center,
+            child:
+            dropDownItem(),
+          ),
         ],
       ),
     );
@@ -144,20 +164,23 @@ class SettingsScreenState extends State<SettingsScreen> {
                 fontWeight: FontWeight.w500,
                 letterSpacing: 1)),
       ),
-      Container(
-        alignment: Alignment.center,
-        child: OutlineButton.icon(
-          icon: Icon(FontAwesomeIcons.link),
-          label: Text('GITHUB',
-              style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1,
-                  color: Colors.grey)),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          onPressed: openGitHub,
+      Padding(padding: EdgeInsets.only(top: 4),
+        child: Container(
+          alignment: Alignment.center,
+          child: OutlineButton.icon(
+            icon: Icon(FontAwesomeIcons.link),
+            label: Text('GITHUB',
+                style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 1,
+                    color: Colors.grey)),
+            shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            onPressed: openGitHub,
+          ),
         ),
-      )
+      ),
+
     ]);
   }
 

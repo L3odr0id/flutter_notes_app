@@ -7,32 +7,37 @@ import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:trpp/data/data.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:trpp/widgets/popup_dialog.dart';
+import 'package:trpp/widgets/toolbar.dart';
 
 const bool NOTESCREEN_MODE_VIEW = false;
 const bool NOTESCREEN_MODE_EDIT = true;
 
 class AddNoteScreen extends StatefulWidget {
-  AddNoteScreen({Key key, this.isNew, this.oldNm, this.mode}) : super(key: key);
+  AddNoteScreen(
+      {Key key, this.isNew, this.oldNm, this.mode, this.notificationModel})
+      : super(key: key);
   final bool isNew;
   final NotesModel oldNm;
   final bool mode;
+  final NotificationModel notificationModel;
 
   @override
   State<StatefulWidget> createState() =>
-      AddNoteScreenState(this, mode, oldNm, isNew);
+      AddNoteScreenState(this, mode, oldNm, isNew, notificationModel);
 }
 
 class AddNoteScreenState extends State<AddNoteScreen> {
-  AddNoteScreenState(this.widget, this.mode, this.nm, this.isNew);
+  AddNoteScreenState(
+      this.widget, this.mode, this.nm, this.isNew, this.notificationModel);
 
   final AddNoteScreen widget;
   bool isNew;
   bool mode;
   NotesModel nm;
 
-  stt.SpeechToText _speech;
+  SpeechToText _speech;
   bool _isListening = false;
   bool keyboardIsUp = false;
 
@@ -40,7 +45,6 @@ class AddNoteScreenState extends State<AddNoteScreen> {
 
   AddNotificationDialog addNotificationDialog;
   NotificationModel notificationModel;
-  bool isNotificationNew;
 
   @override
   Widget build(BuildContext context) {
@@ -48,45 +52,53 @@ class AddNoteScreenState extends State<AddNoteScreen> {
 
     if (mode == NOTESCREEN_MODE_VIEW)
       screen = new ViewScreen(
-          mSetState: mSetState, getText: getText, handleDelete: handleDelete);
+          mSetState: mSetState, getText: getText, handleDelete: handleDelete, widget: this,);
     else
       screen = new EditScreen(handleSave: handleSave, widget: this);
 
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [Expanded(child: screen)],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(right: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            MicrophoneButton(
-              isListening: _isListening,
-              listen: _listen,
-              keyboardIsUp: keyboardIsUp,
+    return WillPopScope(
+        child: Scaffold(
+          body: SafeArea(
+            child: Column(
+              children: [Expanded(child: screen)],
             ),
-            Visibility(
-              child: FloatingActionButton(
-                child: getIconForNotificationBtn(),
-                onPressed: () => addNotificationDialog.showDialog(),
-              ),
-              visible: !keyboardIsUp,
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButton: Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                MicrophoneButton(
+                  isListening: _isListening,
+                  listen: _listen,
+                  keyboardIsUp: keyboardIsUp,
+                ),
+                Visibility(
+                  child: FloatingActionButton(
+                    child: getIconForNotificationBtn(),
+                    onPressed: () => addNotificationDialog.showDialog(),
+                  ),
+                  visible: !keyboardIsUp,
+                ),
+              ],
             ),
-          ],
+          ),
+          backgroundColor: Theme.of(context).backgroundColor,
         ),
-      ),
-    );
+        onWillPop: onWillPop);
+  }
+
+  Future<bool> onWillPop() async {
+    Navigator.pop(context, true);
+    return true;
   }
 
   @override
   void initState() {
     super.initState();
     if (!isNew) contentController.text = nm.content;
-    _speech = stt.SpeechToText();
+    _speech = SpeechToText();
     KeyboardVisibilityNotification().addNewListener(
       onChange: (bool visible) {
         if (!visible && mode == NOTESCREEN_MODE_EDIT) {
@@ -100,44 +112,18 @@ class AddNoteScreenState extends State<AddNoteScreen> {
       },
     );
 
-    addNotificationDialog = AddNotificationDialog(context, getResFromPicker, nm, this);
-    getNotificationModel();
+    addNotificationDialog =
+        AddNotificationDialog(context, getResFromPicker, nm, this);
   }
 
-  Icon getIconForNotificationBtn(){
-    if (isNotificationNew == null || isNotificationNew)
+  Icon getIconForNotificationBtn() {
+    if (notificationModel == null)
       return Icon(FontAwesomeIcons.bell);
     else
       return Icon(FontAwesomeIcons.solidBell);
   }
 
-  getNotificationModel()async{
-    if (isNew) {
-      isNotificationNew = true;
-      notificationModel = NotificationModel();
-    }else {
-      List<NotificationModel> listNM = await NotesDatabaseService.db
-          .getNotificationForNote(nm.id);
-      if (listNM.isEmpty){
-        isNotificationNew = true;
-        notificationModel = NotificationModel(note: nm.id);
-      }else{
-        notificationModel = listNM.first;
-        isNotificationNew = false;
-
-        DateTime dateTime = DateTime.parse(notificationModel.date1);
-        if (dateTime.isBefore(DateTime.now())){
-          NotesDatabaseService.db.deleteNotificationInDB(notificationModel);
-          isNotificationNew = true;
-          notificationModel = NotificationModel();
-        }
-      }
-    }
-
-    setState(() {});
-  }
-
-  void getResFromPicker(DateTime dateTime, bool delete){
+  void getResFromPicker(DateTime dateTime, bool delete) {
     setState(() {});
   }
 
@@ -173,19 +159,29 @@ class AddNoteScreenState extends State<AddNoteScreen> {
   }
 
   void addNewNote() async {
-    NotesModel newNm =
-        NotesModel(content: contentController.text, date: DateTime.now());
-    nm = await NotesDatabaseService.db.addNoteInDB(newNm);
-    isNew = false;
-    notificationModel.note = nm.id;
-    addNotificationDialog.notesModel = nm;
+    if (contentController.text != "") {
+      NotesModel newNm =
+      NotesModel(content: contentController.text, date: DateTime.now());
+      nm = await NotesDatabaseService.db.addNoteInDB(newNm);
+      isNew = false;
+      if (notificationModel != null) notificationModel.note = nm.id;
+    }
   }
 
   void updateNote() {
     nm.content = contentController.text;
     nm.date = DateTime.now();
     NotesDatabaseService.db.updateNoteInDB(nm);
-    addNotificationDialog.notesModel = nm;
+  }
+
+  void saveObBackBtn(){
+    if (isNew) {
+      if (contentController.text != "") {
+        addNewNote();
+      }
+    } else {
+      updateNote();
+    }
   }
 
   void _listen() async {
@@ -239,6 +235,7 @@ class EditScreen extends StatelessWidget {
           onPressed: () {
             handleSave();
           },
+          additionalBack: widget.saveObBackBtn,
         ),
         Expanded(
           child: CustomTextField(
@@ -252,11 +249,12 @@ class EditScreen extends StatelessWidget {
 }
 
 class ViewScreen extends StatelessWidget {
-  ViewScreen({this.mSetState, this.getText, this.handleDelete});
+  ViewScreen({this.mSetState, this.getText, this.handleDelete, this.widget});
 
   final Function mSetState;
   final Function getText;
   final Function handleDelete;
+  final AddNoteScreenState widget;
 
   @override
   Widget build(BuildContext context) {
@@ -268,6 +266,7 @@ class ViewScreen extends StatelessWidget {
           onPressed: () {
             handleDelete();
           },
+          additionalBack: widget.saveObBackBtn,
         ),
         GestureDetector(
           onTap: () => mSetState(),
@@ -294,6 +293,7 @@ class CustomTextField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(15),
       child: TextField(
+        style: TextStyle(color: Theme.of(context).primaryColor),
         controller: controller,
         maxLines: maxLines,
         autofocus: true,
@@ -303,40 +303,6 @@ class CustomTextField extends StatelessWidget {
             // TODO save data
           }
         },
-      ),
-    );
-  }
-}
-
-class CustomToolbar extends StatelessWidget {
-  CustomToolbar(
-      {this.title, this.icon, this.onPressed, this.needBackBtn = true});
-
-  final String title;
-  final IconData icon;
-  final Function onPressed;
-  final bool needBackBtn;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Visibility(
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, size: 27),
-              onPressed: () => Navigator.pop(context, true),
-            ),
-            visible: needBackBtn,
-          ),
-          Text(
-            title,
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
-          ),
-          IconButton(icon: Icon(icon, size: 22), onPressed: onPressed),
-        ],
       ),
     );
   }
@@ -386,7 +352,7 @@ class ReadingTextField extends StatelessWidget {
         maxLines: null,
         controller: TextEditingController(text: text),
         decoration: InputDecoration(fillColor: Colors.transparent),
-        style: TextStyle(fontSize: fontSize, fontWeight: fontWeight),
+        style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: Theme.of(context).primaryColor),
       ),
     );
   }
