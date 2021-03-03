@@ -166,7 +166,7 @@ class NotificationModel{
 
   NotificationModel({this.id, this.note, this.date1});
 
-  NotificationModel.fromMap(Map<String, dynamic> map) {
+  NotificationModel.fromMap(Map<dynamic, dynamic> map) {
     this.id = map['_id'];
     this.note = map['note'];
     this.date1 = map['date1'];
@@ -183,5 +183,14 @@ class NotificationModel{
   makeData(DateTime dateTime){
     date1 = dateTime.toIso8601String();
   }
+
+  String getString(){
+    DateTime time = DateTime.parse(date1);
+    String month = time.month.toString();
+    if (month.length == 1)
+      month = "0"+month;
+    return "Notify ${time.day}.$month at ${time.hour}:${time.minute}";
+  }
+
 
 }

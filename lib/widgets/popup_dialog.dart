@@ -54,7 +54,9 @@ class AddNotificationDialog {
     return SafeArea(
       child: Column(
         children: [
-          Text("Add notification"),
+          Text('Notification options',
+              style: TextStyle(
+                  fontSize: 24, color: Theme.of(_context).primaryColor)),
           _picker2(),
           _removeBtn(),
           _okBtn(),
@@ -98,22 +100,31 @@ class AddNotificationDialog {
   }
 
   Widget _okBtn() {
-    return FlatButton(
-        onPressed: () {
-          Navigator.of(_context).pop();
-          saveNotification();
-          getResult(_chosenTime, _chosenDelete);
-        },
-        child: Text("ok"));
+    return OutlineButton(
+      onPressed: () {
+        Navigator.of(_context).pop();
+        saveNotification();
+        getResult(_chosenTime, _chosenDelete);
+      },
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Text(
+        'Ok',
+        style: TextStyle(fontSize: 14, color: Theme.of(_context).primaryColor),
+      ),
+    );
   }
 
   Widget _removeBtn() {
-    return FlatButton(
+    return OutlineButton(
         onPressed: () {
           Navigator.of(_context).pop();
           cancelScheduledNotification();
         },
-        child: Text("Cancel notification"));
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Text(
+          'Cancel notification',
+          style: TextStyle(fontSize: 14, color: Theme.of(_context).primaryColor),
+        ),);
   }
 
   scheduleNotification() async {

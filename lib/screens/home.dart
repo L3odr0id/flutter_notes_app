@@ -21,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 class _MyHomePageState extends State<HomeScreen> {
   ThemeData theme = appThemeLight;
   List<NotesModel> notesList = [];
+  List<NotificationModel> notificationList = [];
 
   bool _inDeletion = false;
 
@@ -30,6 +31,7 @@ class _MyHomePageState extends State<HomeScreen> {
     NotesDatabaseService.db.init();
     setNotesFromDB();
     setTheme();
+    setNotificationFormDB();
   }
 
   setTheme() async {
@@ -52,6 +54,12 @@ class _MyHomePageState extends State<HomeScreen> {
     setState(() {});
   }
 
+  setNotificationFormDB() async {
+    var fetchedNotes = await NotesDatabaseService.db.getNotificationsFromDB();
+    notificationList = fetchedNotes;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,13 +76,14 @@ class _MyHomePageState extends State<HomeScreen> {
             CustomListView(
                 notesList: notesList,
                 openNote: openNote,
-                onDismissed: dismissNote),
+                onDismissed: dismissNote,
+            notificationList: notificationList,),
           ],
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Padding(
-        padding: EdgeInsets.only(right: 8, bottom: 12),
+        padding: EdgeInsets.only(right: 8, bottom: 46),
         child: FloatingActionButton(
             child: Icon(FontAwesomeIcons.plus),
             onPressed: () => openNote(NOTESCREEN_MODE_EDIT, null, true)),
@@ -133,10 +142,11 @@ class HomeAppBar extends StatelessWidget {
 
 class CustomDismissible extends StatelessWidget {
   CustomDismissible(
-      {Key key, this.index, this.nm, this.openNote, this.onDismissed})
+      {Key key, this.index, this.nm, this.openNote, this.onDismissed, this.notificationModel})
       : super(key: key);
   final int index;
   final NotesModel nm;
+  final NotificationModel notificationModel;
   final Function openNote;
   final Function onDismissed;
 
@@ -145,7 +155,7 @@ class CustomDismissible extends StatelessWidget {
     return Dismissible(
       key: ValueKey(index),
       direction: DismissDirection.endToStart,
-      child: Card(child: NoteListItem(index, nm, openNote)),
+      child: Card(child: NoteListItem(index, nm, openNote, notificationModel)),
       background: Padding(
         padding: EdgeInsets.only(right: 30),
         child: Align(
@@ -165,11 +175,20 @@ class CustomDismissible extends StatelessWidget {
 
 class CustomListView extends StatelessWidget {
   final List<NotesModel> notesList;
+  final List<NotificationModel> notificationList;
   final Function openNote;
   final Function onDismissed;
 
-  CustomListView({Key key, this.notesList, this.openNote, this.onDismissed})
+  CustomListView({Key key, this.notesList, this.openNote, this.onDismissed, this.notificationList})
       : super(key: key);
+
+  NotificationModel getModel(int index){
+    for (int i=0; i< notificationList.length;++i)
+      if (notificationList[i].note == notesList[index].id)
+        return notificationList[i];
+
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +202,7 @@ class CustomListView extends StatelessWidget {
           nm: notesList[index],
           openNote: openNote,
           onDismissed: onDismissed,
+          notificationModel: getModel(index),
         ),
       ),
     );
@@ -190,16 +210,19 @@ class CustomListView extends StatelessWidget {
 }
 
 class NoteListItem extends StatelessWidget {
-  NoteListItem(this.index, this.nm, this.openNote);
+  NoteListItem(this.index, this.nm, this.openNote, this.notificationModel);
 
   final int index;
   final NotesModel nm;
+  final NotificationModel notificationModel;
   final Function openNote;
 
-
-
-
-
+  String getText(){
+    if (notificationModel!=null)
+      return notificationModel.getString();
+    else
+      return "";
+  }
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -219,7 +242,7 @@ class NoteListItem extends StatelessWidget {
         ),
       ),
       trailing: Text(
-        "some info",
+        getText(),
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w400,
