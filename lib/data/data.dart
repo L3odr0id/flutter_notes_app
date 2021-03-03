@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:math';
@@ -23,10 +25,13 @@ class NotesDatabaseService {
     path = join(path, 'notes.db');
     print("Entered path $path");
 
+
     return await openDatabase(path, version: 1,
         onCreate: (Database db, int version) async {
       await db.execute(
           'CREATE TABLE Notes (_id INTEGER PRIMARY KEY, content TEXT, date TEXT);');
+      await db.execute(
+          'CREATE TABLE Notifications (_id INTEGER PRIMARY KEY, note INTEGER, date1 TEXT);');
       print('New table created at $path');
     });
   }
@@ -44,16 +49,55 @@ class NotesDatabaseService {
     return notesList;
   }
 
+  Future<List<NotificationModel>> getNotificationsFromDB() async {
+    final db = await database;
+    List<NotificationModel> notesList = [];
+    List<Map> maps =
+    await db.query('Notifications', columns: ['_id', 'note', 'date1']);
+    if (maps.length > 0) {
+      maps.forEach((map) {
+        notesList.add(NotificationModel.fromMap(map));
+      });
+    }
+    return notesList;
+  }
+
+  Future<List<NotificationModel>> getNotificationForNote(int id) async {
+    final db = await database;
+    List<NotificationModel> notesList = [];
+    List<Map> maps =
+    await db.query('Notifications', columns: ['_id', 'note', 'date1'], where: "note = ?", whereArgs: [id]);
+    if (maps.length > 0) {
+      maps.forEach((map) {
+        notesList.add(NotificationModel.fromMap(map));
+      });
+    }
+    return notesList;
+  }
+
   updateNoteInDB(NotesModel updatedNote) async {
     final db = await database;
     await db.update('Notes', updatedNote.toMap(),
         where: '_id = ?', whereArgs: [updatedNote.id]);
   }
 
+  updateNotificationInDB(NotificationModel updatedNotification)async{
+    final db = await database;
+    await db.update('Notifications', updatedNotification.toMap(),
+        where: '_id = ?', whereArgs: [updatedNotification.id]);
+  }
+
   Future<bool> deleteNoteInDB(NotesModel noteToDelete) async {
     final db = await database;
     final res = await db.delete('Notes', where: '_id = ?', whereArgs: [noteToDelete.id]);
     print('Note deleted');
+    return true;
+  }
+
+  Future<bool> deleteNotificationInDB(NotificationModel noteToDelete) async {
+    final db = await database;
+    final res = await db.delete('Notifications', where: '_id = ?', whereArgs: [noteToDelete.id]);
+    print('Notification deleted');
     return true;
   }
 
@@ -65,6 +109,17 @@ class NotesDatabaseService {
     });
     newNote.id = id;
     print('Note added: ${newNote.content}');
+    return newNote;
+  }
+
+  Future<NotificationModel> addNotificationInDB(NotificationModel newNote) async {
+    final db = await database;
+    int id = await db.transaction((transaction) {
+      return transaction.rawInsert(
+          'INSERT into Notifications(note, date1) VALUES ( "${newNote.note}", "${newNote.date1}");');
+    });
+    newNote.id = id;
+    print('Notification added: ${newNote.date1}');
     return newNote;
   }
 }
@@ -86,7 +141,47 @@ class NotesModel {
     return <String, dynamic>{
       '_id': this.id,
       'content': this.content,
-      'date': this.date.toIso8601String()
+      'date': this.date.toIso8601String(),
     };
   }
+
+  String getTitleFromModel(int maxSymbols) {
+    List<String> a = content.split("\n");
+    return a.first.substring(0, min(a.first.length, maxSymbols));
+  }
+
+  String getShortDesc(int maxSymbols) {
+    List<String> a = content.split("\n");
+    if (a.length > 1) {
+      return a[1].substring(0, min(a[1].length, maxSymbols));
+    } else
+      return "";
+  }
+}
+
+class NotificationModel{
+  int id;
+  int note;
+  String date1;
+
+  NotificationModel({this.id, this.note, this.date1});
+
+  NotificationModel.fromMap(Map<String, dynamic> map) {
+    this.id = map['_id'];
+    this.note = map['note'];
+    this.date1 = map['date1'];
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      '_id': this.id,
+      'note': this.note,
+      'date1': this.date1,
+    };
+  }
+
+  makeData(DateTime dateTime){
+    date1 = dateTime.toIso8601String();
+  }
+
 }

@@ -8,8 +8,7 @@ import 'package:trpp/data/theme.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trpp/widgets/custom_alert_dialog.dart';
 
-import 'note_add.dart';
-import 'note_view.dart';
+import 'note.dart';
 import 'settings.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -59,7 +58,13 @@ class _MyHomePageState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            HomeAppBar(),
+            //HomeAppBar(),
+            CustomToolbar(
+              needBackBtn: false,
+              title: "Home",
+              icon: FontAwesomeIcons.cog,
+              onPressed: openSettings,
+            ),
             CustomListView(
                 notesList: notesList,
                 openNote: openNote,
@@ -67,10 +72,19 @@ class _MyHomePageState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-          child: Icon(FontAwesomeIcons.plus),
-          onPressed: () => openNote(NOTESCREEN_MODE_EDIT, null, true)),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(right: 8, bottom: 12),
+        child: FloatingActionButton(
+            child: Icon(FontAwesomeIcons.plus),
+            onPressed: () => openNote(NOTESCREEN_MODE_EDIT, null, true)),
+      ),
     );
+  }
+
+  void openSettings(){
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => SettingsScreen()));
   }
 
   void openNote(bool mode, NotesModel nm, bool isNew) async {
@@ -79,7 +93,7 @@ class _MyHomePageState extends State<HomeScreen> {
         MaterialPageRoute(
             builder: (context) =>
                 AddNoteScreen(oldNm: nm, isNew: isNew, mode: mode)));
-    if (res) {
+    if (res != null && res) {
       setNotesFromDB();
       setState(() {});
     }
@@ -93,6 +107,7 @@ class _MyHomePageState extends State<HomeScreen> {
   }
 }
 
+// TODO delete deprecated class
 class HomeAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -181,24 +196,15 @@ class NoteListItem extends StatelessWidget {
   final NotesModel nm;
   final Function openNote;
 
-  String getTitleFromModel(NotesModel nm) {
-    List<String> a = nm.content.split("\n");
-    return a.first.substring(0, min(a.first.length, 8));
-  }
 
-  String getShortDesc(NotesModel nm) {
-    List<String> a = nm.content.split("\n");
-    if (a.length > 1) {
-      return a[1].substring(0, min(a[1].length, 16));
-    } else
-      return "";
-  }
+
+
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(
-        getTitleFromModel(nm),
+        nm.getTitleFromModel(8),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(fontSize: 19, fontWeight: FontWeight.w500),
@@ -206,7 +212,7 @@ class NoteListItem extends StatelessWidget {
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 8),
         child: Text(
-          getShortDesc(nm),
+          nm.getShortDesc(16),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w300),

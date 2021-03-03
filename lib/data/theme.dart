@@ -12,8 +12,8 @@ class TupleTheme {
 }
 // ignore: non_constant_identifier_names
 final List<TupleTheme> ThemeNames = [
-  TupleTheme("dark", appThemeDark),
-  TupleTheme("light", appThemeLight),
+  TupleTheme("Dark", appThemeDark),
+  TupleTheme("Light", appThemeLight),
 ];
 
 Future<TupleTheme> getCurrentTheme() async {

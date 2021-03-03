@@ -29,6 +29,12 @@ dependencies:
   path_provider: ^1.6.18
   sqflite: ^1.1.5
   shared_preferences: ^0.5.12
+  speech_to_text: ^3.1.0
+  avatar_glow: ^1.2.0
+  keyboard_visibility: any
+  slide_popup_dialog: ^0.0.2
+  flutter_local_notifications: ^4.0.1+1
+  flutter_native_timezone: ^1.0.4
 
 
   # The following adds the Cupertino Icons font to your application.
