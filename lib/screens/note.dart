@@ -10,7 +10,6 @@ import 'package:trpp/data/data.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:trpp/widgets/popup_dialog.dart';
 
-
 const bool NOTESCREEN_MODE_VIEW = false;
 const bool NOTESCREEN_MODE_EDIT = true;
 
@@ -102,7 +101,6 @@ class AddNoteScreenState extends State<AddNoteScreen> {
     );
 
     addNotificationDialog = AddNotificationDialog(context, getResFromPicker, nm, this);
-
     getNotificationModel();
   }
 

@@ -192,5 +192,4 @@ class NotificationModel{
     return "Notify ${time.day}.$month at ${time.hour}:${time.minute}";
   }
 
-
 }
