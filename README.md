@@ -1,4 +1,4 @@
-# Notes application on Flutter
+# Notes application with Flutter
 
 Link go GooglePlay: https://play.google.com/store/apps/details?id=com.company55.notes
 
