@@ -1,15 +1,12 @@
-import 'dart:math';
-
-import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:trpp/data/data.dart';
 import 'package:trpp/data/theme.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trpp/widgets/custom_alert_dialog.dart';
+import 'package:trpp/widgets/toolbar.dart';
 
-import 'note_add.dart';
-import 'note_view.dart';
+import 'note.dart';
 import 'settings.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,8 +17,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<HomeScreen> {
-  ThemeData theme = appThemeLight;
+  TupleTheme theme;
   List<NotesModel> notesList = [];
+  List<NotificationModel> notificationList = [];
 
   bool _inDeletion = false;
 
@@ -30,6 +28,12 @@ class _MyHomePageState extends State<HomeScreen> {
     super.initState();
     NotesDatabaseService.db.init();
     setNotesFromDB();
+    setNotificationFormDB();
+    setLocalTheme();
+  }
+
+  setLocalTheme() async {
+    theme = (await getCurrentTheme());
   }
 
   setNotesFromDB() async {
@@ -41,35 +45,83 @@ class _MyHomePageState extends State<HomeScreen> {
     setState(() {});
   }
 
+  setNotificationFormDB() async {
+    var fetchedNotes = await NotesDatabaseService.db.getNotificationsFromDB();
+    notificationList = fetchedNotes;
+    deleteBadNotifications();
+    setState(() {});
+  }
+
+  deleteBadNotifications() async {
+    List<NotificationModel> badGuys = List<NotificationModel>();
+    for (int i = 0; i < notificationList.length; ++i) {
+      if (DateTime.parse(notificationList[i].date1).isBefore(DateTime.now())) {
+        NotesDatabaseService.db.deleteNotificationInDB(notificationList[i]);
+        badGuys.add(notificationList[i]);
+      }
+    }
+
+    for (int i = 0; i < badGuys.length; ++i)
+      notificationList.remove(badGuys[i]);
+
+    if (badGuys.isNotEmpty) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            HomeAppBar(),
+            //HomeAppBar(),
+            CustomToolbar(
+              needBackBtn: false,
+              title: "Home",
+              icon: FontAwesomeIcons.cog,
+              onPressed: openSettings,
+            ),
             CustomListView(
-                notesList: notesList,
-                openNote: openNote,
-                onDismissed: dismissNote),
+              notesList: notesList,
+              openNote: openNote,
+              onDismissed: dismissNote,
+              notificationList: notificationList,
+            ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-          child: Icon(FontAwesomeIcons.plus),
-          onPressed: () => openNote(NOTESCREEN_MODE_EDIT, null, true)),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(right: 8, bottom: 46),
+        child: FloatingActionButton(
+            child: Icon(FontAwesomeIcons.plus),
+            onPressed: () => openNote(NOTESCREEN_MODE_EDIT, null, true, null)),
+      ),
+      backgroundColor: Theme.of(context).backgroundColor,
     );
   }
 
-  void openNote(bool mode, NotesModel nm, bool isNew) async {
+  void openSettings() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => SettingsScreen(
+                  title: theme,
+                )));
+  }
+
+  void openNote(bool mode, NotesModel nm, bool isNew,
+      NotificationModel notificationModel) async {
     final res = await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-                AddNoteScreen(oldNm: nm, isNew: isNew, mode: mode)));
-    if (res) {
+            builder: (context) => AddNoteScreen(
+                oldNm: nm,
+                isNew: isNew,
+                mode: mode,
+                notificationModel: notificationModel)));
+    if (res != null && res) {
       setNotesFromDB();
-      setState(() {});
+      setNotificationFormDB();
     }
   }
 
@@ -81,35 +133,18 @@ class _MyHomePageState extends State<HomeScreen> {
   }
 }
 
-class HomeAppBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(20, 8, 5, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Text(
-            'Home',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
-          ),
-          IconButton(
-            icon: Icon(FontAwesomeIcons.cog, size: 22),
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (context) => SettingsScreen())),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class CustomDismissible extends StatelessWidget {
-  const CustomDismissible(
-      {Key key, this.index, this.nm, this.openNote, this.onDismissed})
+  CustomDismissible(
+      {Key key,
+      this.index,
+      this.nm,
+      this.openNote,
+      this.onDismissed,
+      this.notificationModel})
       : super(key: key);
   final int index;
   final NotesModel nm;
+  final NotificationModel notificationModel;
   final Function openNote;
   final Function onDismissed;
 
@@ -118,7 +153,7 @@ class CustomDismissible extends StatelessWidget {
     return Dismissible(
       key: ValueKey(index),
       direction: DismissDirection.endToStart,
-      child: Card(child: NoteListItem(index, nm, openNote)),
+      child: Card(child: NoteListItem(index, nm, openNote, notificationModel)),
       background: Padding(
         padding: EdgeInsets.only(right: 30),
         child: Align(
@@ -138,11 +173,25 @@ class CustomDismissible extends StatelessWidget {
 
 class CustomListView extends StatelessWidget {
   final List<NotesModel> notesList;
+  final List<NotificationModel> notificationList;
   final Function openNote;
   final Function onDismissed;
 
-  CustomListView({Key key, this.notesList, this.openNote, this.onDismissed})
+  CustomListView(
+      {Key key,
+      this.notesList,
+      this.openNote,
+      this.onDismissed,
+      this.notificationList})
       : super(key: key);
+
+  NotificationModel getModel(int index) {
+    for (int i = 0; i < notificationList.length; ++i)
+      if (notificationList[i].note == notesList[index].id)
+        return notificationList[i];
+
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +205,7 @@ class CustomListView extends StatelessWidget {
           nm: notesList[index],
           openNote: openNote,
           onDismissed: onDismissed,
+          notificationModel: getModel(index),
         ),
       ),
     );
@@ -163,22 +213,17 @@ class CustomListView extends StatelessWidget {
 }
 
 class NoteListItem extends StatelessWidget {
-  NoteListItem(this.index, this.nm, this.openNote);
+  NoteListItem(this.index, this.nm, this.openNote, this.notificationModel);
 
   final int index;
   final NotesModel nm;
+  final NotificationModel notificationModel;
   final Function openNote;
 
-  String getTitleFromModel(NotesModel nm) {
-    List<String> a = nm.content.split("\n");
-    return a.first.substring(0, min(a.first.length, 8));
-  }
-
-  String getShortDesc(NotesModel nm) {
-    List<String> a = nm.content.split("\n");
-    if (a.length > 1) {
-      return a[1].substring(0, min(a[1].length, 16));
-    } else
+  String getText() {
+    if (notificationModel != null)
+      return notificationModel.getString();
+    else
       return "";
   }
 
@@ -186,31 +231,40 @@ class NoteListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(
-        getTitleFromModel(nm),
+        nm.getTitleFromModel(16),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 19, fontWeight: FontWeight.w500),
+        style: TextStyle(
+          fontSize: 19,
+          fontWeight: FontWeight.w500,
+          color: Theme.of(context).primaryColor,
+        ),
       ),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 8),
         child: Text(
-          getShortDesc(nm),
+          nm.getShortDesc(24),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w300),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w300,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
       ),
       trailing: Text(
-        "some info",
+        getText(),
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w400,
           color: Theme.of(context).accentColor,
         ),
       ),
-      onTap: () => openNote(NOTESCREEN_MODE_VIEW, nm, false),
+      onTap: () => openNote(NOTESCREEN_MODE_VIEW, nm, false, notificationModel),
       contentPadding: EdgeInsets.all(17),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      tileColor: Theme.of(context).cardColor,
     );
   }
 }

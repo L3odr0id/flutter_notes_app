@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 
-
 class CustomAlertDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-
-    Widget myFlatButton(title, color, value){
+    Widget myFlatButton(title, color, value) {
       return FlatButton(
-        child: Text(title,style: TextStyle(color: color),),
+        child: Text(
+          title,
+          style: TextStyle(color: color),
+        ),
         onPressed: () => Navigator.of(context).pop(value),
       );
     }
 
     return AlertDialog(
       title: Text('Confirm delete'),
-      content: Text('Do you really want to delete this note?'),
+      content: Text('Do you really want to delete this?'),
       actions: <Widget>[
         myFlatButton('Delete', Colors.redAccent, true),
         myFlatButton('Cancel', Colors.grey, false),
