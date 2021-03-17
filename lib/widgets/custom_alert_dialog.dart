@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-
 class CustomAlertDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-
-    Widget myFlatButton(title, color, value){
+    Widget myFlatButton(title, color, value) {
       return FlatButton(
-        child: Text(title,style: TextStyle(color: color),),
+        child: Text(
+          title,
+          style: TextStyle(color: color),
+        ),
         onPressed: () => Navigator.of(context).pop(value),
       );
     }

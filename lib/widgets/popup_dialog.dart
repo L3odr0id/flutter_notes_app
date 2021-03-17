@@ -10,6 +10,9 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:trpp/screens/note.dart';
 
 class AddNotificationDialog {
+  /*
+  Class for scheduling a notification
+   */
   BuildContext _context;
   bool _isSwitched = false;
   Function getResult;
@@ -48,6 +51,7 @@ class AddNotificationDialog {
   }
 
   Widget _widget() {
+    // Main structure of the slider
     return SafeArea(
       child: Column(
         children: [
@@ -73,6 +77,7 @@ class AddNotificationDialog {
   }
 
   Widget _picker2() {
+    // DataTime picker widget
     return Container(
       child: CupertinoTheme(
         data: CupertinoThemeData(

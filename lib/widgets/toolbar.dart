@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 
 class CustomToolbar extends StatelessWidget {
   CustomToolbar(
-      {this.title, this.icon, this.onPressed,this.additionalBack, this.needBackBtn = true});
+      {this.title,
+      this.icon,
+      this.onPressed,
+      this.additionalBack,
+      this.needBackBtn = true});
 
   final String title;
   final IconData icon;
@@ -19,11 +23,14 @@ class CustomToolbar extends StatelessWidget {
         children: <Widget>[
           Visibility(
             child: IconButton(
-              icon: Icon(Icons.arrow_back, size: 27, color: Theme.of(context).primaryColor,),
+              icon: Icon(
+                Icons.arrow_back,
+                size: 27,
+                color: Theme.of(context).primaryColor,
+              ),
               onPressed: () {
                 Navigator.pop(context, true);
-                if (additionalBack != null)
-                  additionalBack();
+                if (additionalBack != null) additionalBack();
               },
             ),
             visible: needBackBtn,
@@ -33,9 +40,18 @@ class CustomToolbar extends StatelessWidget {
           ),
           Text(
             title,
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w500, color: Theme.of(context).primaryColor),
+            style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).primaryColor),
           ),
-          IconButton(icon: Icon(icon, size: 22, color: Theme.of(context).primaryColor,), onPressed: onPressed),
+          IconButton(
+              icon: Icon(
+                icon,
+                size: 22,
+                color: Theme.of(context).primaryColor,
+              ),
+              onPressed: onPressed),
         ],
       ),
     );

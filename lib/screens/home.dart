@@ -1,10 +1,5 @@
-import 'dart:io';
-import 'dart:math';
-
-import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:trpp/data/data.dart';
 import 'package:trpp/data/theme.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -37,7 +32,7 @@ class _MyHomePageState extends State<HomeScreen> {
     setLocalTheme();
   }
 
-  setLocalTheme()async{
+  setLocalTheme() async {
     theme = (await getCurrentTheme());
   }
 
@@ -71,7 +66,6 @@ class _MyHomePageState extends State<HomeScreen> {
 
     if (badGuys.isNotEmpty) setState(() {});
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +102,11 @@ class _MyHomePageState extends State<HomeScreen> {
 
   void openSettings() {
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => SettingsScreen(title: theme,)));
+        context,
+        MaterialPageRoute(
+            builder: (context) => SettingsScreen(
+                  title: theme,
+                )));
   }
 
   void openNote(bool mode, NotesModel nm, bool isNew,
@@ -132,30 +130,6 @@ class _MyHomePageState extends State<HomeScreen> {
     _inDeletion = !(await NotesDatabaseService.db.deleteNoteInDB(nm));
     notesList.remove(nm);
     setState(() {});
-  }
-}
-
-// TODO delete deprecated class
-class HomeAppBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(20, 8, 5, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Text(
-            'Home',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
-          ),
-          IconButton(
-            icon: Icon(FontAwesomeIcons.cog, size: 22),
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (context) => SettingsScreen())),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -260,7 +234,11 @@ class NoteListItem extends StatelessWidget {
         nm.getTitleFromModel(16),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 19, fontWeight: FontWeight.w500, color: Theme.of(context).primaryColor,),
+        style: TextStyle(
+          fontSize: 19,
+          fontWeight: FontWeight.w500,
+          color: Theme.of(context).primaryColor,
+        ),
       ),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 8),
@@ -268,7 +246,11 @@ class NoteListItem extends StatelessWidget {
           nm.getShortDesc(24),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w300, color: Theme.of(context).primaryColor,),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w300,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
       ),
       trailing: Text(

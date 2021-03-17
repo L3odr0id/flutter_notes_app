@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +50,11 @@ class AddNoteScreenState extends State<AddNoteScreen> {
 
     if (mode == NOTESCREEN_MODE_VIEW)
       screen = new ViewScreen(
-          mSetState: mSetState, getText: getText, handleDelete: handleDelete, widget: this,);
+        mSetState: mSetState,
+        getText: getText,
+        handleDelete: handleDelete,
+        widget: this,
+      );
     else
       screen = new EditScreen(handleSave: handleSave, widget: this);
 
@@ -161,7 +163,7 @@ class AddNoteScreenState extends State<AddNoteScreen> {
   void addNewNote() async {
     if (contentController.text != "") {
       NotesModel newNm =
-      NotesModel(content: contentController.text, date: DateTime.now());
+          NotesModel(content: contentController.text, date: DateTime.now());
       nm = await NotesDatabaseService.db.addNoteInDB(newNm);
       isNew = false;
       if (notificationModel != null) notificationModel.note = nm.id;
@@ -174,7 +176,7 @@ class AddNoteScreenState extends State<AddNoteScreen> {
     NotesDatabaseService.db.updateNoteInDB(nm);
   }
 
-  void saveObBackBtn(){
+  void saveObBackBtn() {
     if (isNew) {
       if (contentController.text != "") {
         addNewNote();
@@ -352,7 +354,10 @@ class ReadingTextField extends StatelessWidget {
         maxLines: null,
         controller: TextEditingController(text: text),
         decoration: InputDecoration(fillColor: Colors.transparent),
-        style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: Theme.of(context).primaryColor),
+        style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: fontWeight,
+            color: Theme.of(context).primaryColor),
       ),
     );
   }

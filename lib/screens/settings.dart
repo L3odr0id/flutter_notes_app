@@ -19,10 +19,10 @@ class SettingsScreen extends StatefulWidget {
 
 class SettingsScreenState extends State<SettingsScreen> {
   TupleTheme dropdownValue;
-  SettingsScreenState(TupleTheme theme){
-    for (int i=0;i<ThemeNames.length;++i)
-      if (ThemeNames[i].name == theme.name)
-        dropdownValue = ThemeNames[i];
+
+  SettingsScreenState(TupleTheme theme) {
+    for (int i = 0; i < ThemeNames.length; ++i)
+      if (ThemeNames[i].name == theme.name) dropdownValue = ThemeNames[i];
   }
 
   @override
@@ -110,7 +110,10 @@ class SettingsScreenState extends State<SettingsScreen> {
   Widget dropDownItem() {
     return DropdownButton<TupleTheme>(
       value: dropdownValue,
-      icon: Icon(FontAwesomeIcons.caretDown, color: Theme.of(context).accentColor,),
+      icon: Icon(
+        FontAwesomeIcons.caretDown,
+        color: Theme.of(context).accentColor,
+      ),
       iconSize: 16,
       elevation: 16,
       style: TextStyle(color: Theme.of(context).primaryColor),
@@ -141,14 +144,15 @@ class SettingsScreenState extends State<SettingsScreen> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text('App Theme', style: TextStyle(fontSize: 24, color: Theme.of(context).primaryColor)),
+          Text('App Theme',
+              style: TextStyle(
+                  fontSize: 24, color: Theme.of(context).primaryColor)),
           Container(
             height: 20,
           ),
           Align(
             alignment: Alignment.center,
-            child:
-            dropDownItem(),
+            child: dropDownItem(),
           ),
         ],
       ),
@@ -164,7 +168,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                 fontWeight: FontWeight.w500,
                 letterSpacing: 1)),
       ),
-      Padding(padding: EdgeInsets.only(top: 4),
+      Padding(
+        padding: EdgeInsets.only(top: 4),
         child: Container(
           alignment: Alignment.center,
           child: OutlineButton.icon(
@@ -175,12 +180,11 @@ class SettingsScreenState extends State<SettingsScreen> {
                     letterSpacing: 1,
                     color: Colors.grey)),
             shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             onPressed: openGitHub,
           ),
         ),
       ),
-
     ]);
   }
 

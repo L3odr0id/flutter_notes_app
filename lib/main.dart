@@ -13,7 +13,9 @@ setThemeAndRun() async {
   TupleTheme savedTheme = (await getCurrentTheme());
   print("setTheme home " + savedTheme.name);
 
-  runApp(MyApp(theme: savedTheme.theme,));
+  runApp(MyApp(
+    theme: savedTheme.theme,
+  ));
 }
 
 class MyApp extends StatefulWidget {
@@ -25,8 +27,8 @@ class MyApp extends StatefulWidget {
   _AppState createState() => _AppState(theme);
 }
 
-class _AppState extends State<MyApp>{
-  _AppState(ThemeData theme){
+class _AppState extends State<MyApp> {
+  _AppState(ThemeData theme) {
     chosenTheme = theme;
   }
 
@@ -48,8 +50,6 @@ class _AppState extends State<MyApp>{
             theme: theme,
             home: HomeScreen(),
           );
-        }
-    );
+        });
   }
 }
-
