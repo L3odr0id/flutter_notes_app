@@ -1,16 +1,34 @@
-# trpp
+# Notes application on Flutter
 
-Project for trpp
+Link go GooglePlay: https://play.google.com/store/apps/details?id=com.company55.notes
 
-## Getting Started
+## Screens
 
-This project is a starting point for a Flutter application.
+In this app you are able to make notes, delete, edit them using voice input and schedule notifications.
 
-A few resources to get you started if this is your first Flutter project:
+### Main
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+In the Home page you can open or delete existing note, create new or open settings.
+<p align="center" style="">
+  <img src="screenshots/1.jpg" width="350" title="hover text">
+  <img src="screenshots/2.jpg" width="350" title="hover text">
+</p>
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Settings
+Here you can change theme or open this repository
+<p align="center" style="">
+  <img src="screenshots/3.jpg" width="350" title="hover text">
+</p>
+
+### View Note
+In this screen you can delete or edit note, use voice input and set notification
+<p align="center" style="">
+  <img src="screenshots/4.jpg" width="350" title="hover text">
+  <img src="screenshots/6.jpg" width="350" title="hover text">
+</p>
+
+### Set notification
+In this screen you can schedule notification.
+<p align="center" style="">
+  <img src="screenshots/5.jpg" width="350" title="hover text">
+</p>
