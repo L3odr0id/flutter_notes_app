@@ -138,6 +138,7 @@ class AddNoteScreenState extends State<AddNoteScreen> {
     return res;
   }
 
+  /// Saves note content correctly
   void handleSave() async {
     if (isNew) {
       if (contentController.text != "") {
@@ -150,6 +151,7 @@ class AddNoteScreenState extends State<AddNoteScreen> {
     setState(() {});
   }
 
+  /// Deletes note content correctly
   void handleDelete() async {
     if (nm.id != null) NotesDatabaseService.db.deleteNoteInDB(nm);
     Navigator.pop(context, true);
@@ -160,6 +162,7 @@ class AddNoteScreenState extends State<AddNoteScreen> {
     setState(() {});
   }
 
+  /// Adds new note content correctly
   void addNewNote() async {
     if (contentController.text != "") {
       NotesModel newNm =
@@ -170,6 +173,7 @@ class AddNoteScreenState extends State<AddNoteScreen> {
     }
   }
 
+  /// Updates note in db
   void updateNote() {
     nm.content = contentController.text;
     nm.date = DateTime.now();
@@ -186,6 +190,7 @@ class AddNoteScreenState extends State<AddNoteScreen> {
     }
   }
 
+  /// Starts listening
   void _listen() async {
     if (!_isListening) {
       bool available = await _speech.initialize(

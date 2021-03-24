@@ -9,19 +9,14 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:trpp/screens/note.dart';
 
+/// Slider for scheduling a notification
 class AddNotificationDialog {
-  /*
-  Class for scheduling a notification
-   */
   BuildContext _context;
   bool _isSwitched = false;
   Function getResult;
 
   DateTime _chosenTime;
   bool _chosenDelete;
-
-//  NotificationModel notificationModel;
-  //bool isNotificationNew;
 
   AddNoteScreenState parent;
 
@@ -37,12 +32,14 @@ class AddNotificationDialog {
     initTimeZone();
   }
 
+  /// Initializes user timezone
   void initTimeZone() async {
     tz.initializeTimeZones();
     tz.setLocalLocation(
         tz.getLocation(await FlutterNativeTimezone.getLocalTimezone()));
   }
 
+  /// Opens slider
   void showDialog() {
     slideDialog.showSlideDialog(
       context: _context,
@@ -101,21 +98,12 @@ class AddNotificationDialog {
     );
   }
 
+  /// Returns time that was scheduled if user already created a notification
   DateTime getInitialDateTime() {
     if (parent.notificationModel != null)
       return DateTime.parse(parent.notificationModel.date1);
     else
       return DateTime.now();
-  }
-
-  Widget _switchToDelete() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text("Delete note after notification"),
-        Switch(value: _isSwitched, onChanged: (value) => _isSwitched = value)
-      ],
-    );
   }
 
   Widget _okBtn() {
@@ -158,6 +146,7 @@ class AddNotificationDialog {
     );
   }
 
+  /// Schedules notification
   scheduleNotification() async {
     if (parent.nm != null) {
       FlutterLocalNotificationsPlugin plugin =
@@ -193,6 +182,7 @@ class AddNotificationDialog {
     }
   }
 
+  /// Cancels notifications
   void cancelScheduledNotification() {
     print("Cancel");
     if (parent.notificationModel != null) {
@@ -207,11 +197,13 @@ class AddNotificationDialog {
     }
   }
 
+  /// Gets time from DateTimePicker
   tz.TZDateTime getTime() {
     tz.TZDateTime a = tz.TZDateTime.from(_chosenTime, tz.local);
     return a;
   }
 
+  /// Saves notification in db
   saveNotification() async {
     cancelScheduledNotification();
     parent.notificationModel = new NotificationModel();
@@ -222,14 +214,15 @@ class AddNotificationDialog {
     if (parent.notificationModel.id != null) scheduleNotification();
   }
 
-  // ignore: missing_return
+  /// DummyFunction
   Future onDidReceiveLocalNotification(
-      int id, String title, String body, String payload) {}
+      int id, String title, String body, String payload) async{return;}
 
-  // ignore: missing_return
-  Future selectNotification(String payload) {
+  /// DummyFunction
+  Future selectNotification(String payload) async{
     if (payload != null) {
       debugPrint('notification payload: $payload');
+      return;
     }
   }
 }

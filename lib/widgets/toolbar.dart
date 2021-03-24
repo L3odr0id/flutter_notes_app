@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Appbar class
 class CustomToolbar extends StatelessWidget {
   CustomToolbar(
       {this.title,

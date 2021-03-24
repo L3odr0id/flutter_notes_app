@@ -30,6 +30,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     super.initState();
   }
 
+  /// Saves theme data in file
   saveTheme(String name) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('theme', name);

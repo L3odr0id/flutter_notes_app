@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Stores themeData and it's name
 class TupleTheme {
   String name;
   ThemeData theme;
@@ -29,6 +30,7 @@ final List<TupleTheme> ThemeNames = [
 final TupleTheme defaultTheme =
     TupleTheme("Dark Green elephant", appThemeDarkGreen);
 
+/// Returns name of current theme
 Future<TupleTheme> getCurrentTheme() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String themeName = prefs.getString('theme');
@@ -42,6 +44,7 @@ Future<TupleTheme> getCurrentTheme() async {
   return defaultTheme;
 }
 
+/// Returns themeData by name
 ThemeData getThemeByName(String name) {
   for (var i = 0; i < ThemeNames.length; i++)
     if (ThemeNames[i].name == name) return ThemeNames[i].theme;
@@ -52,6 +55,7 @@ ThemeData getThemeByName(String name) {
 Color background = Color.fromARGB(255, 40, 42, 54);
 Color foreground = Color.fromARGB(255, 248, 248, 242);
 
+/// Returns constant theme
 ThemeData generateTheme(bool isDark, MaterialColor color) {
   if (isDark)
     return ThemeData.dark().copyWith(

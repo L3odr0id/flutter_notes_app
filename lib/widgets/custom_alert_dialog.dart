@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Dialog, that asks if you want to delete note
 class CustomAlertDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

@@ -32,10 +32,12 @@ class _MyHomePageState extends State<HomeScreen> {
     setLocalTheme();
   }
 
+  /// Set app theme form file
   setLocalTheme() async {
     theme = (await getCurrentTheme());
   }
 
+  /// Loads notes from database
   setNotesFromDB() async {
     if (!_inDeletion) {
       var fetchedNotes = await NotesDatabaseService.db.getNotesFromDB();
@@ -45,6 +47,7 @@ class _MyHomePageState extends State<HomeScreen> {
     setState(() {});
   }
 
+  /// Loads notifications from database
   setNotificationFormDB() async {
     var fetchedNotes = await NotesDatabaseService.db.getNotificationsFromDB();
     notificationList = fetchedNotes;
@@ -133,6 +136,8 @@ class _MyHomePageState extends State<HomeScreen> {
   }
 }
 
+
+/// Make elements on home screen dismissible
 class CustomDismissible extends StatelessWidget {
   CustomDismissible(
       {Key key,
@@ -220,6 +225,7 @@ class NoteListItem extends StatelessWidget {
   final NotificationModel notificationModel;
   final Function openNote;
 
+  /// Returns text, stored on notification model
   String getText() {
     if (notificationModel != null)
       return notificationModel.getString();

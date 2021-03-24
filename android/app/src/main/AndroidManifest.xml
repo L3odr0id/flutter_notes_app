@@ -10,8 +10,9 @@
 
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="trpp"
-        android:icon="@mipmap/ic_launcher">
+        android:label="Mosaic"
+        android:icon="@drawable/icon2"
+        android:roundIcon="@drawable/icon">
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
